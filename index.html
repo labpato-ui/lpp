@@ -175,7 +175,7 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
 <div id="ca">
 
   <!-- ══ INTERNO ══ -->
-  <div id="vi">
+  <div id="vi" style="display:flex;flex:1;overflow:hidden">
     <div class="sb">
       <div class="sbl"><div class="si">🔬</div><div class="st">LPP</div><div class="ss">Gestão de Amostras</div></div>
       <div class="ssec">Menu</div>
@@ -726,9 +726,11 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded',function(){ setView('i'); });
 window.SUPA_URL = localStorage.getItem('lpp_supa_url')||'';
 window.SUPA_KEY = localStorage.getItem('lpp_supa_key')||'';
 window.supabase = null;
+setView('i');
 window.initSupabase = function(){
   if(!SUPA_URL||!SUPA_KEY) return false;
   try{ window.supabase = window.supabaseJs.createClient(SUPA_URL,SUPA_KEY); return true; }
@@ -889,10 +891,10 @@ window.logAudit = async function(tipo,desc){
 
 // ── NAV ──────────────────────────────────────────────────────
 window.setView = function(v){
-  document.getElementById('vi').style.display=v==='i'?'flex':'none';
-  document.getElementById('vp').style.display=v==='p'?'flex':'none';
-  document.getElementById('bi').classList.toggle('on',v==='i');
-  document.getElementById('bp2').classList.toggle('on',v==='p');
+  var vi=document.getElementById('vi'); if(vi) vi.style.display=v==='i'?'flex':'none';
+  var vp=document.getElementById('vp'); if(vp) vp.style.display=v==='p'?'flex':'none';
+  var bi=document.getElementById('bi'); if(bi) bi.classList.toggle('on',v==='i');
+  var bp2=document.getElementById('bp2'); if(bp2) bp2.classList.toggle('on',v==='p');
 };
 window.goPage = function(p){
   document.querySelectorAll('.pg').forEach(function(e){e.classList.remove('on');});
@@ -2962,13 +2964,15 @@ window.preencherConfigsN8N = function(){
   if(el) el.value = localStorage.getItem('lpp_n8n_url') || '';
 };
 
-// ── OVERRIDE goPage para carregar notificações ────────────────
-var _origGoPage = window.goPage;
-window.goPage = function(id){
-  if(_origGoPage) _origGoPage(id);
-  if(id === 'notif') carregarNotificacoes();
-  if(id === 'cfg') preencherConfigsN8N();
-};
+// ── PATCH goPage para carregar notificações ──────────────────
+var _goPageOrig = window.goPage;
+if(_goPageOrig) {
+  window.goPage = function(id){
+    _goPageOrig(id);
+    if(id === 'notif') { try{ carregarNotificacoes(); }catch(e){} }
+    if(id === 'cfg')   { try{ preencherConfigsN8N(); }catch(e){} }
+  };
+}
 
 // ── INIT EXTRA ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
