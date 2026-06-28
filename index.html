@@ -206,10 +206,19 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
 <body>
 
 <div id="dbar">
-  <span class="dlbl">👁 Visualizando como:</span>
-  <button class="dbtn on" id="bi"  onclick="setView('i')">🔐 Técnico do LPP (interno)</button>
-  <button class="dbtn"    id="bp2" onclick="setView('p')">🌐 Pesquisador Externo (público)</button>
-  <span class="dnote">Demo com dados simulados — nenhuma instalação necessária</span>
+  <div id="dbar-logado" style="display:none;align-items:center;gap:10px;width:100%">
+    <span class="dlbl">🔐</span>
+    <span id="dbar-nome" style="font-size:12px;font-weight:500;color:var(--tx)"></span>
+    <span id="dbar-cargo" style="font-size:11px;color:var(--mu)"></span>
+    <button class="dbtn" id="btn-pub-mode" onclick="setView('p')" style="margin-left:8px">🌐 Ver portal público</button>
+    <button class="dbtn" id="btn-int-mode" onclick="setView('i')" style="display:none">🔐 Voltar ao interno</button>
+    <button class="dbtn" onclick="fazerLogout()" style="margin-left:auto;color:var(--ve)">Sair →</button>
+  </div>
+  <div id="dbar-publico" style="display:flex;align-items:center;gap:10px;width:100%">
+    <span class="dlbl">🌐 Portal do Pesquisador</span>
+    <span style="font-size:11px;color:var(--mu)">— Solicitação de processamento histológico</span>
+    <button class="dbtn" onclick="abrirLogin()" style="margin-left:auto">🔐 Acesso da equipe técnica</button>
+  </div>
 </div>
 
 <div id="ca">
@@ -942,10 +951,13 @@ window.logAudit = async function(tipo,desc){
 
 // ── NAV ──────────────────────────────────────────────────────
 window.setView = function(v){
+  if(v==='i'&&!window._userSession){abrirLogin();return;}
   document.getElementById('vi').style.display=v==='i'?'flex':'none';
   document.getElementById('vp').style.display=v==='p'?'flex':'none';
-  document.getElementById('bi').classList.toggle('on',v==='i');
-  document.getElementById('bp2').classList.toggle('on',v==='p');
+  var bpm=document.getElementById('btn-pub-mode');
+  var bim=document.getElementById('btn-int-mode');
+  if(bpm)bpm.style.display=v==='i'?'inline-block':'none';
+  if(bim)bim.style.display=v==='p'&&window._userSession?'inline-block':'none';
 };
 window.goPage = function(p){
   document.querySelectorAll('.pg').forEach(function(e){e.classList.remove('on');});
@@ -1919,7 +1931,6 @@ window.imprimirEtiquetas = function(){
     +'<div class="grid">'+etqHtml+'</div>'
     +'</div>'
     +'<script>window.onload=function(){setTimeout(function(){window.print();},800);}<\/script>'
-    +'</body></html>'
   );
   win.document.close();
 };
@@ -3092,6 +3103,101 @@ window.avancarEtapa = function(cod,colId){
   toast(cod+' avançado para '+KANBAN_COLS[idx+1].label+'!');
 };
 
+
+// ── AUTENTICAÇÃO ──────────────────────────────────────────────
+window._userSession = null;
+
+window.abrirLogin = function(){
+  document.getElementById('login-overlay').style.display='flex';
+  setTimeout(function(){document.getElementById('login-email').focus();},100);
+};
+
+window.fecharLogin = function(){
+  document.getElementById('login-overlay').style.display='none';
+  document.getElementById('login-error').style.display='none';
+};
+
+window.fazerLogin = async function(){
+  var email=(document.getElementById('login-email').value||'').trim().toLowerCase();
+  var senha=document.getElementById('login-senha').value||'';
+  var errEl=document.getElementById('login-error');
+  if(!email||!senha){errEl.textContent='Preencha e-mail e senha.';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  // Show loading
+  var btn=document.querySelector('#login-overlay button');
+  if(btn)btn.textContent='Entrando...';
+  try{
+    if(!supabase){throw new Error('Supabase não conectado');}
+    var res=await supabase.auth.signInWithPassword({email:email,password:senha});
+    if(res.error)throw res.error;
+    // Check if in equipe_tecnica
+    var check=await supabase.from('equipe_tecnica').select('nome,cargo').eq('email',email).eq('ativo',true).single();
+    if(check.error||!check.data){
+      await supabase.auth.signOut();
+      throw new Error('Acesso não autorizado para este e-mail.');
+    }
+    window._userSession={email:email,nome:check.data.nome,cargo:check.data.cargo,token:res.data.session.access_token};
+    fecharLogin();
+    ativarModoInterno(check.data.nome, check.data.cargo);
+    logAudit('LOGIN',email);
+    toast('Bem-vindo, '+check.data.nome.split(' ')[0]+'!');
+  }catch(e){
+    errEl.textContent=e.message||'Erro ao fazer login.';
+    errEl.style.display='block';
+    if(btn)btn.textContent='Entrar';
+  }
+};
+
+window.fazerLogout = async function(){
+  if(!confirm('Sair do sistema?'))return;
+  if(supabase)await supabase.auth.signOut();
+  window._userSession=null;
+  ativarModoPublico();
+  toast('Sessão encerrada.');
+};
+
+window.ativarModoInterno = function(nome, cargo){
+  // Show internal nav
+  document.getElementById('vi').style.display='flex';
+  document.getElementById('vp').style.display='none';
+  // Update dbar
+  document.getElementById('dbar-logado').style.display='flex';
+  document.getElementById('dbar-publico').style.display='none';
+  document.getElementById('dbar-nome').textContent=nome;
+  document.getElementById('dbar-cargo').textContent='— '+cargo;
+  // Load data
+  carregarProjetos();
+  carregarAnticorpos();
+  goPage('dash');
+};
+
+window.ativarModoPublico = function(){
+  document.getElementById('vi').style.display='none';
+  document.getElementById('vp').style.display='flex';
+  document.getElementById('dbar-logado').style.display='none';
+  document.getElementById('dbar-publico').style.display='flex';
+  document.getElementById('btn-pub-mode').style.display='none';
+  document.getElementById('btn-int-mode').style.display='none';
+};
+
+window.verificarSessaoSalva = async function(){
+  if(!supabase)return;
+  try{
+    var res=await supabase.auth.getSession();
+    if(res.data&&res.data.session&&res.data.session.user){
+      var email=res.data.session.user.email;
+      var check=await supabase.from('equipe_tecnica').select('nome,cargo').eq('email',email).eq('ativo',true).single();
+      if(check.data){
+        window._userSession={email:email,nome:check.data.nome,cargo:check.data.cargo};
+        ativarModoInterno(check.data.nome, check.data.cargo);
+        return;
+      }
+    }
+  }catch(e){console.warn('Session check:',e);}
+  // No valid session - show public mode
+  ativarModoPublico();
+};
+
 </script>
 
 <!-- SETUP OVERLAY -->
@@ -3223,6 +3329,40 @@ window.avancarEtapa = function(cod,colId){
     <div style="padding:11px 16px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px">
       <button class="btn bto" onclick="document.getElementById('cfgtec-modal').style.display='none'">Cancelar</button>
       <button class="btn btg" onclick="salvarCfgTec()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="login-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:var(--p2);border:1px solid var(--bd);border-radius:16px;padding:32px;width:380px;max-width:95vw">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:32px;margin-bottom:8px">&#128274;</div>
+      <div style="font-size:18px;font-weight:700;color:var(--tx)">Acesso da Equipe Tecnica</div>
+      <div style="font-size:12px;color:var(--mu);margin-top:4px">LPP — UFCSPA</div>
+    </div>
+    <div id="login-error" style="display:none;background:#2d1a1a;border:1px solid var(--ve);border-radius:8px;padding:10px 14px;font-size:12px;color:#f85149;margin-bottom:16px"></div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;color:var(--mu);letter-spacing:1px;display:block;margin-bottom:5px">E-MAIL</label>
+      <input id="login-email" type="email" placeholder="seu@ufcspa.edu.br"
+        style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;color:var(--tx);font-size:13px"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;color:var(--mu);letter-spacing:1px;display:block;margin-bottom:5px">SENHA</label>
+      <input id="login-senha" type="password" placeholder="••••••••••"
+        style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;color:var(--tx);font-size:13px"
+        onkeydown="if(event.key==='Enter')fazerLogin()">
+    </div>
+    <button onclick="fazerLogin()"
+      style="width:100%;padding:11px;background:var(--bl);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px">
+      Entrar
+    </button>
+    <button onclick="fecharLogin()"
+      style="width:100%;padding:9px;background:transparent;color:var(--mu);border:1px solid var(--bd);border-radius:8px;font-size:13px;cursor:pointer">
+      Cancelar
+    </button>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--mu)">
+      Problemas de acesso? Contate o Giuliano.
     </div>
   </div>
 </div>
