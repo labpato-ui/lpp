@@ -163,6 +163,41 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
 #ab-tbody td{vertical-align:top;font-size:12px}
 .desc-badge{font-size:11px;color:var(--mu);font-style:italic;margin-top:3px;max-width:280px;line-height:1.4}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+
+.kb-board{display:flex;gap:10px;overflow-x:auto;padding:0 0 16px;min-height:calc(100vh - 160px)}
+.kb-col{flex:0 0 220px;background:var(--p2);border:0.5px solid var(--bd);border-radius:10px;display:flex;flex-direction:column;max-height:calc(100vh - 170px)}
+.kb-col-head{padding:10px 12px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:7px;position:sticky;top:0;background:var(--p2);border-radius:10px 10px 0 0;z-index:1}
+.kb-col-icon{font-size:14px}
+.kb-col-label{font-size:11px;font-weight:600;letter-spacing:0.5px;flex:1}
+.kb-col-count{font-size:10px;color:var(--mu);font-family:var(--font-mono);background:var(--bg);border:0.5px solid var(--bd);border-radius:10px;padding:1px 7px}
+.kb-col-body{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:7px}
+.kb-col-body.drag-over{background:var(--bd);border-radius:0 0 10px 10px;outline:2px dashed var(--bl)}
+.kb-card{background:var(--bg);border:0.5px solid var(--bd);border-radius:8px;padding:10px;cursor:grab;transition:transform 0.15s,box-shadow 0.15s;position:relative}
+.kb-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.kb-card.dragging{opacity:0.4;cursor:grabbing}
+.kb-card-cod{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--bl);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.kb-card-pesq{font-size:12px;font-weight:500;color:var(--tx);margin-bottom:3px;line-height:1.3}
+.kb-card-aluno{font-size:11px;color:var(--pu);margin-bottom:4px}
+.kb-card-tecs{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px}
+.kb-tec{font-size:9px;padding:1px 5px;border-radius:3px;background:var(--gd);color:var(--gn);border:0.5px solid var(--gn)33}
+.kb-progress{height:3px;background:var(--bd);border-radius:2px;margin-top:5px}
+.kb-progress-bar{height:100%;border-radius:2px;transition:width 0.3s}
+.kb-prazo{font-size:9px;color:var(--mu);margin-top:4px}
+.kb-card-actions{position:absolute;top:7px;right:7px;display:none;gap:4px}
+.kb-card:hover .kb-card-actions{display:flex}
+.kb-card-btn{font-size:11px;padding:2px 5px;border-radius:4px;border:0.5px solid var(--bd);background:var(--p2);color:var(--mu);cursor:pointer}
+.kb-card-btn:hover{color:var(--tx);border-color:var(--bl)}
+.kb-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(2px)}
+.kb-modal-box{background:var(--p2);border:0.5px solid var(--bd);border-radius:12px;width:480px;max-width:95vw;max-height:85vh;overflow-y:auto;padding:20px}
+.kb-modal-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.kb-check-item{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:0.5px solid var(--bd);font-size:12px}
+.kb-check-item:last-child{border-bottom:none}
+.kb-check-item input[type=checkbox]{accent-color:var(--gn);width:14px;height:14px;cursor:pointer}
+.kb-check-item label{flex:1;cursor:pointer;color:var(--tx)}
+.kb-check-item input:checked+label{text-decoration:line-through;color:var(--mu)}
+.kb-add-task{display:flex;gap:7px;margin-top:10px}
+.kb-add-task input{flex:1;background:var(--bg);border:0.5px solid var(--bd);border-radius:5px;padding:5px 8px;color:var(--tx);font-size:12px}
+.kb-empty{font-size:11px;color:var(--mu);text-align:center;padding:20px 0;font-style:italic}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -170,12 +205,17 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
 </head>
 <body>
 
-
+<div id="dbar">
+  <span class="dlbl">👁 Visualizando como:</span>
+  <button class="dbtn on" id="bi"  onclick="setView('i')">🔐 Técnico do LPP (interno)</button>
+  <button class="dbtn"    id="bp2" onclick="setView('p')">🌐 Pesquisador Externo (público)</button>
+  <span class="dnote">Demo com dados simulados — nenhuma instalação necessária</span>
+</div>
 
 <div id="ca">
 
   <!-- ══ INTERNO ══ -->
-  <div id="vi" style="display:flex;flex:1;overflow:hidden">
+  <div id="vi">
     <div class="sb">
       <div class="sbl"><div class="si">🔬</div><div class="st">LPP</div><div class="ss">Gestão de Amostras</div></div>
       <div class="ssec">Menu</div>
@@ -187,7 +227,7 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
       <button class="nv"     id="nv-prod"  onclick="goPage('prod')">  <span>📊</span> Produção</button>
       <button class="nv"     id="nv-ab"    onclick="goPage('ab')">   <span>🧫</span> Anticorpos</button>
       <button class="nv"     id="nv-met"    onclick="goPage('met')">   <span>📈</span> Métricas</button>
-      <button class="nv"     id="nv-notif" onclick="goPage('notif')"><span>🔔</span> Notificações<span id="notif-badge" style="display:none;margin-left:auto;background:#f85149;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:16px;text-align:center">0</span></button>
+      <button class="nv"     id="nv-kan"    onclick="goPage('kan')">   <span>🗂️</span> Kanban</button>
       <button class="nv"     id="nv-cfg"   onclick="goPage('cfg')">  <span>⚙️</span> Configurações</button>
       <div class="suser"><div class="un">Giuliano R. Guimarães</div><div class="ur">● Biólogo — LPP/UFCSPA</div><button onclick="toast('Logout registrado.')">Sair →</button></div>
     </div>
@@ -221,7 +261,7 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
         <div class="pgh">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
             <div><div class="pgt">Projetos de Pesquisa</div><div class="pgs">Todos os projetos registrados no LPP</div></div>
-            <div style="display:flex;gap:8px;align-items:center"><input id="busca" style="background:var(--pn);border:1px solid var(--bd);border-radius:7px;padding:7px 13px;color:var(--tx);font-size:13px;width:230px;outline:none" placeholder="Buscar por código ou pesquisador…" oninput="renderProj()"><button class="btn btg" onclick="abrirModalNP()">+ Novo Projeto</button></div>
+            <input id="busca" style="background:var(--pn);border:1px solid var(--bd);border-radius:7px;padding:7px 13px;color:var(--tx);font-size:13px;width:230px;outline:none" placeholder="Buscar por código ou pesquisador…" oninput="renderProj()">
           </div>
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--mu);font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;margin-right:2px">FILTRAR:</span>
@@ -371,6 +411,25 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
         <div style="display:flex;gap:8px;padding:0 16px 12px;border-bottom:1px solid var(--bd)"><button id="btn-view-cards" class="btn btg bsm" onclick="setMetView('cards')">Cards</button><button id="btn-view-bubbles"  class="btn bto bsm" onclick="setMetView('bubbles')">Orientadores</button><button id="btn-view-bubbles2" class="btn bto bsm" onclick="setMetView('bubbles2')">Alunos</button><div style="margin-left:auto;display:none" id="bubble-controls" style="display:flex;gap:8px;align-items:center"><span style="font-size:11px;color:var(--mu)">X:</span><select id="bub-x" onchange="drawBubbles()" style="background:var(--p2);border:0.5px solid var(--bd);border-radius:5px;padding:3px 7px;color:var(--tx);font-size:11px"><option value="totalCit">Citações</option><option value="hIndex">Índice h</option><option value="avgIF">IF médio</option><option value="lppScore">Score LPP</option></select><span style="font-size:11px;color:var(--mu)">Y:</span><select id="bub-y" onchange="drawBubbles()" style="background:var(--p2);border:0.5px solid var(--bd);border-radius:5px;padding:3px 7px;color:var(--tx);font-size:11px"><option value="avgIF">IF médio</option><option value="hIndex">Índice h</option><option value="totalCit">Citações</option><option value="lppScore">Score LPP</option></select></div></div><div id="met-body" style="padding:16px"></div><div id="met-bubbles2" style="display:none;padding:16px;position:relative"><div style="display:flex;gap:8px;margin-bottom:10px"><span style="font-size:11px;color:var(--mu)">X:</span><select id="bub2-x" onchange="drawBubbles2()" style="background:var(--p2);border:0.5px solid var(--bd);border-radius:5px;padding:3px 7px;color:var(--tx);font-size:11px"><option value="totalCit">Citacoes</option><option value="projetosLPP">Projetos LPP</option><option value="hIndex">Indice h</option><option value="lppScore">Score LPP</option></select><span style="font-size:11px;color:var(--mu)">Y:</span><select id="bub2-y" onchange="drawBubbles2()" style="background:var(--p2);border:0.5px solid var(--bd);border-radius:5px;padding:3px 7px;color:var(--tx);font-size:11px"><option value="tecnicasLPP">Tecnicas LPP</option><option value="amostrasTotais">Amostras</option><option value="avgIF">IF medio</option><option value="hIndex">Indice h</option></select><span style="font-size:10px;color:var(--mu);margin-left:8px">Tamanho=Score LPP · Cor=indice h</span></div><div style="position:relative;height:420px"><canvas id="bub2-canvas" role="img" aria-label="Bubble chart alunos">Student bubble chart.</canvas></div><div id="bub2-tooltip" style="position:absolute;pointer-events:none;background:var(--p2);border:1px solid var(--bd);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--tx);min-width:190px;display:none;z-index:10"><div id="b2tt-name" style="font-size:13px;font-weight:600;margin-bottom:7px"></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Indice h</span><span id="b2tt-h" style="font-family:monospace;color:var(--pu)"></span></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Citacoes</span><span id="b2tt-cit" style="font-family:monospace;color:var(--am)"></span></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Score LPP</span><span id="b2tt-score" style="font-family:monospace;color:var(--gn)"></span></div><div style="border-top:0.5px solid var(--bd);margin:5px 0;padding-top:5px;font-size:9px;color:var(--mu)">PRODUCAO LPP</div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Projetos</span><span id="b2tt-proj" style="font-family:monospace"></span></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Tecnicas</span><span id="b2tt-tec" style="font-family:monospace"></span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--mu)">Amostras</span><span id="b2tt-ams" style="font-family:monospace"></span></div></div></div><div id="met-bubbles" style="display:none;padding:16px;position:relative"><div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#888780;display:inline-block"></span>h 0–5</span><span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#58a6ff;display:inline-block"></span>h 6–15</span><span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#3fb950;display:inline-block"></span>h 16–30</span><span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#d29922;display:inline-block"></span>h 31–50</span><span style="font-size:10px;color:var(--mu);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f85149;display:inline-block"></span>h 50+</span><span style="font-size:10px;color:var(--mu);margin-left:8px">Tamanho = Score LPP</span><span style="font-size:10px;color:var(--mu);margin-left:12px;border-left:0.5px solid var(--bd);padding-left:12px">Azul/verde/âmbar = orientadores &nbsp;·&nbsp; Roxo = alunos</span></div><div style="position:relative;height:420px"><canvas id="bub-canvas" role="img" aria-label="Bubble chart of LPP researcher metrics">Bubble chart showing h-index, citations, IF and LPP Score per researcher.</canvas></div><div id="bub-tooltip" style="position:absolute;pointer-events:none;background:var(--p2);border:1px solid var(--bd);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--tx);min-width:180px;display:none;z-index:10"><div id="btt-name" style="font-size:13px;font-weight:600;margin-bottom:7px;color:var(--tx)"></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Índice h</span><span id="btt-h" style="font-family:monospace;color:var(--bl)"></span></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">i10-index</span><span id="btt-i10" style="font-family:monospace;color:var(--pu)"></span></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Citações totais</span><span id="btt-cit" style="font-family:monospace;color:var(--am)"></span></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">IF médio</span><span id="btt-if" style="font-family:monospace;color:var(--pu)"></span></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Score LPP</span><span id="btt-score" style="font-family:monospace;color:var(--gn)"></span></div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Projetos LPP</span><span id="btt-proj" style="font-family:monospace;color:var(--tx)"></span></div><div id="btt-tipo-row" style="display:flex;justify-content:space-between"><span style="color:var(--mu)">Papel</span><span id="btt-tipo" style="font-family:monospace;color:var(--pu)"></span></div></div></div>
       </div>
 
+      <div class="pg" id="pg-kan">
+        <div class="pgh" style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:15px;font-weight:700">🗂️ Kanban — Fluxo Histopatológico</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn bto bsm" onclick="toggleKanbanCfg()">⚙️ Campos</button>
+            <button class="btn bto bsm" onclick="renderKanban()">↻ Atualizar</button>
+          </div>
+        </div>
+        <div id="kb-cfg-panel" style="display:none;background:var(--p2);border:0.5px solid var(--bd);border-radius:8px;padding:12px;margin:0 16px 12px;display:flex;gap:16px;flex-wrap:wrap">
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="kb-show-aluno" checked onchange="saveKanbanCfg()"> Aluno</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="kb-show-tecs" checked onchange="saveKanbanCfg()"> Técnicas</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="kb-show-prazo" checked onchange="saveKanbanCfg()"> Prazo</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="kb-show-progress" checked onchange="saveKanbanCfg()"> Progresso</label>
+        </div>
+        <div style="padding:0 16px">
+          <div class="kb-board" id="kb-board"></div>
+        </div>
+      </div>
+
       <div class="pg" id="pg-cfg">
         <div class="pgh"><div class="pgt">Configurações</div><div class="pgs">Gerencie colorações e anticorpos disponíveis no formulário de solicitação</div></div>
 
@@ -411,22 +470,6 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
                 
               </div>
             </div>
-          </div>
-        </div>
-
-
-        <!-- N8N + WHATSAPP -->
-        <div class="card" style="margin-bottom:14px">
-          <div class="ch">🔗 Integração n8n + WhatsApp</div>
-          <div class="cb">
-            <div style="font-size:12px;color:var(--mu);margin-bottom:11px">
-              Ao ativar, concluir ou atualizar um projeto, o n8n notificará o pesquisador via WhatsApp automaticamente.
-            </div>
-            <div class="f"><label>URL DO WEBHOOK N8N (EVENTOS DO APP)</label>
-              <input id="n8n-url" placeholder="https://lppatologia.app.n8n.cloud/webhook/lpp-app-eventos" value="">
-            </div>
-            <button class="btn btg" onclick="salvarN8NConfig()" style="margin-top:4px">Salvar webhook</button>
-            <div id="n8n-status" style="margin-top:8px;font-size:12px;color:var(--mu)"></div>
           </div>
         </div>
 
@@ -508,20 +551,6 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
           </div>
 
         </div>
-      </div>
-
-
-      <!-- NOTIFICAÇÕES -->
-      <div class="pg" id="pg-notif">
-        <div class="pgh">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div><div class="pgt">Notificações</div><div class="pgs">Alertas do sistema e WhatsApp</div></div>
-            <button class="btn bto bsm" onclick="marcarTodasLidas()">✓ Marcar todas como lidas</button>
-          </div>
-        </div>
-        <div class="card"><div class="cb" style="padding:0" id="notif-lista">
-          <div style="text-align:center;padding:40px;color:var(--mu)">🔔 Nenhuma notificação ainda.</div>
-        </div></div>
       </div>
 
     </div><!-- /ma -->
@@ -726,9 +755,8 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded',function(){ setView('i'); });
-window.SUPA_URL = localStorage.getItem('lpp_supa_url')||'';
-window.SUPA_KEY = localStorage.getItem('lpp_supa_key')||'';
+window.SUPA_URL = localStorage.getItem('lpp_supa_url')||'https://twmecgfwrtshxsjztska.supabase.co';
+window.SUPA_KEY = localStorage.getItem('lpp_supa_key')||'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3bWVjZ2Z3cnRzaHhzanp0c2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTU3NjcsImV4cCI6MjA5NDA5MTc2N30.Bgz45BdOH14R_px_If9rGCq48N5Uw0ti_NFdXoJpUKg';
 window.supabase = null;
 window.initSupabase = function(){
   if(!SUPA_URL||!SUPA_KEY) return false;
@@ -738,13 +766,13 @@ window.initSupabase = function(){
 
 // ── DEMO DATA ───────────────────────────────────────────────
 window.PROJ_LOCAL = [
-  {cod:'SQ-25',pesq:'Dra. Ana Costa',inst:'UNICAMP — Cardiologia',email:'ana.costa@unicamp.br',orcid:'0000-0002-1825-0097',orcid:'0000-0002-1825-0097',orig:'animal',esp:'Rato Wistar',ceua:'CEUA/UNICAMP 6234/2024',ceuaI:'CEUA-UNICAMP',ceuaV:'até 12/2026',orgaos:['Fígado','Rim','Pulmão','Coração'],tecs:['HE','Masson','Picrossirius','Ki-67','a-SMA'],grps:[{n:'Controle',q:5},{n:'Tratado',q:5}],st:'ativo',ams:['A01','A02','A03','A04','A05','B01','B02','B03','B04','B05'],desc:'Avaliar o efeito do losartana na fibrose cardíaca e renal em modelo de hipertensão renovascular em ratos Wistar.',ppg:'PPG em Patologia — UFCSPA',aluno:'Felipe Martins',vincul:'Mestrando',emailAluno:'f.martins@unicamp.br'},
-  {cod:'SR-25',pesq:'Prof. Dr. João Neves',inst:'USP — Neurociência',email:'j.neves@usp.br',orcid:'0000-0001-5109-3700',orig:'animal',esp:'Camundongo C57BL/6',ceua:'CEUA/USP 8891/2024',ceuaI:'CEUA-USP',ceuaV:'até 06/2026',orgaos:['Cérebro','Cerebelo','Medula'],tecs:['HE','Luxol Fast Blue','CD3'],grps:[{n:'WT Controle',q:6},{n:'KO Tratado',q:6}],st:'processando',ams:[],desc:'Investigar o papel do gene GFAP-KO na neuroinflamação em modelo murino de encefalomielite autoimune experimental.',ppg:'PPG em Neurociências — USP',aluno:'Laura Fernandes',vincul:'Doutoranda',emailAluno:'l.fernandes@usp.br'},
-  {cod:'SS-25',pesq:'Dra. Marina Rocha',inst:'UNESP — Hepatologia',email:'m.rocha@unesp.br',orcid:'0000-0003-4060-7360',orig:'animal',esp:'Rato Sprague-Dawley',ceua:'CEUA/UNESP 5544/2024',ceuaI:'CEUA-UNESP',ceuaV:'até 03/2026',orgaos:['Fígado','Pâncreas','Baço'],tecs:['HE','PAS','Masson','CD68','TGF-b1'],grps:[{n:'Controle',q:8},{n:'Cirrose',q:8},{n:'Tratado',q:8}],st:'ativo',ams:[],desc:'Estudar o efeito protetor do extrato de cúrcuma na fibrose hepática induzida por CCl₄ em ratos.',ppg:'PPG em Hepatologia — UNESP',aluno:'Carlos Pinto',vincul:'Mestrando',emailAluno:'c.pinto@unesp.br'},
-  {cod:'SP-24',pesq:'Dra. Priya Venkat',inst:'UNICAMP — Oncologia',email:'p.venkat@unicamp.br',orcid:'0000-0002-1825-0097',orig:'humana',esp:'',mat:'Biópsia excisional',casos:'45',cep:'CAAE 33221100.4.0000.5404',orgaos:['Mama','Linfonodo'],tecs:['HE','Ki-67','p53','CD31'],grps:[{n:'Luminal A',q:15},{n:'Triplo Negativo',q:15},{n:'Saudável',q:15}],st:'concluido',ams:[],desc:'Caracterizar marcadores de proliferação e angiogênese em subtipos moleculares de carcinoma mamário em biópsias humanas.',ppg:'PPG em Oncologia — UNICAMP',aluno:'Beatriz Souza',vincul:'Doutoranda',emailAluno:'b.souza@unicamp.br'},
-  {cod:'SU-26',pesq:'Prof. Dr. Ricardo Alves',inst:'USP — Farmacologia',email:'r.alves@usp.br',orcid:'0000-0001-5109-3700',orig:'animal',esp:'Rato Wistar',ceua:'CEUA/USP 1122/2026',ceuaI:'CEUA-USP',ceuaV:'até 12/2026',orgaos:['Fígado','Rim'],tecs:['HE','Masson'],grps:[{n:'Controle',q:6},{n:'Tratado',q:6}],st:'solicitado',ams:[],desc:'',ppg:'',aluno:'',vincul:'',emailAluno:''},
-  {cod:'ST-26',pesq:'Dra. Patrícia Lima',inst:'UNICAMP — Oncologia',email:'p.lima@unicamp.br',orcid:'0000-0002-4791-8015',orig:'humana',esp:'',mat:'Biópsia excisional',casos:'30',cep:'CEP CAAE 9988/2025',orgaos:['Mama','Linfonodo'],tecs:['HE','Ki-67','p53'],grps:[{n:'Luminal A',q:10},{n:'Triplo Negativo',q:10}],st:'solicitado',ams:[],desc:'',ppg:'',aluno:'',vincul:'',emailAluno:''},
-  {cod:'SV-26',pesq:'Prof. Dr. André Teixeira',inst:'UFRGS — Reumatologia',email:'a.teixeira@ufrgs.br',orcid:'0000-0001-5109-3700',orcid:'0000-0003-4060-7360',orig:'humana',esp:'',mat:'Biópsia sinovial',casos:'?',cep:'CEP CAAE 7721/2025',orgaos:['Sinóvia','Linfonodo'],tecs:['HE','CD3','CD68','IL-6'],grps:[{n:'AR ativa',q:'?',aberta:true},{n:'Controle',q:'?',aberta:true}],st:'em_recrutamento',ams:['A01','A02','A03'],desc:'Caracterizar infiltrado inflamatório sinovial em pacientes com artrite reumatoide ativa vs remissão — coorte sendo montada.',ppg:'PPG em Reumatologia — UFRGS',aluno:'Sofia Almeida',vincul:'Doutoranda',emailAluno:'s.almeida@ufrgs.br'}
+  {cod:'SQ-25',etapa:'concluido',pesq:'Dra. Ana Costa',inst:'UNICAMP — Cardiologia',email:'ana.costa@unicamp.br',orcid:'0000-0002-1825-0097',orcid:'0000-0002-1825-0097',orig:'animal',esp:'Rato Wistar',ceua:'CEUA/UNICAMP 6234/2024',ceuaI:'CEUA-UNICAMP',ceuaV:'até 12/2026',orgaos:['Fígado','Rim','Pulmão','Coração'],tecs:['HE','Masson','Picrossirius','Ki-67','a-SMA'],grps:[{n:'Controle',q:5},{n:'Tratado',q:5}],st:'ativo',ams:['A01','A02','A03','A04','A05','B01','B02','B03','B04','B05'],desc:'Avaliar o efeito do losartana na fibrose cardíaca e renal em modelo de hipertensão renovascular em ratos Wistar.',ppg:'PPG em Patologia — UFCSPA',aluno:'Felipe Martins',vincul:'Mestrando',emailAluno:'f.martins@unicamp.br'},
+  {cod:'SR-25',etapa:'analise',pesq:'Prof. Dr. João Neves',inst:'USP — Neurociência',email:'j.neves@usp.br',orcid:'0000-0001-5109-3700',orig:'animal',esp:'Camundongo C57BL/6',ceua:'CEUA/USP 8891/2024',ceuaI:'CEUA-USP',ceuaV:'até 06/2026',orgaos:['Cérebro','Cerebelo','Medula'],tecs:['HE','Luxol Fast Blue','CD3'],grps:[{n:'WT Controle',q:6},{n:'KO Tratado',q:6}],st:'processando',ams:[],desc:'Investigar o papel do gene GFAP-KO na neuroinflamação em modelo murino de encefalomielite autoimune experimental.',ppg:'PPG em Neurociências — USP',aluno:'Laura Fernandes',vincul:'Doutoranda',emailAluno:'l.fernandes@usp.br'},
+  {cod:'SS-25',etapa:'coloracao',pesq:'Dra. Marina Rocha',inst:'UNESP — Hepatologia',email:'m.rocha@unesp.br',orcid:'0000-0003-4060-7360',orig:'animal',esp:'Rato Sprague-Dawley',ceua:'CEUA/UNESP 5544/2024',ceuaI:'CEUA-UNESP',ceuaV:'até 03/2026',orgaos:['Fígado','Pâncreas','Baço'],tecs:['HE','PAS','Masson','CD68','TGF-b1'],grps:[{n:'Controle',q:8},{n:'Cirrose',q:8},{n:'Tratado',q:8}],st:'ativo',ams:[],desc:'Estudar o efeito protetor do extrato de cúrcuma na fibrose hepática induzida por CCl₄ em ratos.',ppg:'PPG em Hepatologia — UNESP',aluno:'Carlos Pinto',vincul:'Mestrando',emailAluno:'c.pinto@unesp.br'},
+  {cod:'SP-24',etapa:'concluido',pesq:'Dra. Priya Venkat',inst:'UNICAMP — Oncologia',email:'p.venkat@unicamp.br',orcid:'0000-0002-1825-0097',orig:'humana',esp:'',mat:'Biópsia excisional',casos:'45',cep:'CAAE 33221100.4.0000.5404',orgaos:['Mama','Linfonodo'],tecs:['HE','Ki-67','p53','CD31'],grps:[{n:'Luminal A',q:15},{n:'Triplo Negativo',q:15},{n:'Saudável',q:15}],st:'concluido',ams:[],desc:'Caracterizar marcadores de proliferação e angiogênese em subtipos moleculares de carcinoma mamário em biópsias humanas.',ppg:'PPG em Oncologia — UNICAMP',aluno:'Beatriz Souza',vincul:'Doutoranda',emailAluno:'b.souza@unicamp.br'},
+  {cod:'SU-26',etapa:'processamento',pesq:'Prof. Dr. Ricardo Alves',inst:'USP — Farmacologia',email:'r.alves@usp.br',orcid:'0000-0001-5109-3700',orig:'animal',esp:'Rato Wistar',ceua:'CEUA/USP 1122/2026',ceuaI:'CEUA-USP',ceuaV:'até 12/2026',orgaos:['Fígado','Rim'],tecs:['HE','Masson'],grps:[{n:'Controle',q:6},{n:'Tratado',q:6}],st:'solicitado',ams:[],desc:'',ppg:'',aluno:'',vincul:'',emailAluno:''},
+  {cod:'ST-26',etapa:'microtomia',pesq:'Dra. Patrícia Lima',inst:'UNICAMP — Oncologia',email:'p.lima@unicamp.br',orcid:'0000-0002-4791-8015',orig:'humana',esp:'',mat:'Biópsia excisional',casos:'30',cep:'CEP CAAE 9988/2025',orgaos:['Mama','Linfonodo'],tecs:['HE','Ki-67','p53'],grps:[{n:'Luminal A',q:10},{n:'Triplo Negativo',q:10}],st:'solicitado',ams:[],desc:'',ppg:'',aluno:'',vincul:'',emailAluno:''},
+  {cod:'SV-26',etapa:'avaliacao',pesq:'Prof. Dr. André Teixeira',inst:'UFRGS — Reumatologia',email:'a.teixeira@ufrgs.br',orcid:'0000-0001-5109-3700',orcid:'0000-0003-4060-7360',orig:'humana',esp:'',mat:'Biópsia sinovial',casos:'?',cep:'CEP CAAE 7721/2025',orgaos:['Sinóvia','Linfonodo'],tecs:['HE','CD3','CD68','IL-6'],grps:[{n:'AR ativa',q:'?',aberta:true},{n:'Controle',q:'?',aberta:true}],st:'em_recrutamento',ams:['A01','A02','A03'],desc:'Caracterizar infiltrado inflamatório sinovial em pacientes com artrite reumatoide ativa vs remissão — coorte sendo montada.',ppg:'PPG em Reumatologia — UFRGS',aluno:'Sofia Almeida',vincul:'Doutoranda',emailAluno:'s.almeida@ufrgs.br'}
 ];
 window.PROJ = PROJ_LOCAL.slice();
 window.STATUS_DB = {
@@ -755,6 +783,29 @@ window.STATUS_DB = {
 window.ORGAOS=['Fígado','Rim','Pulmão','Coração','Baço','Cérebro','Intestino','Estômago','Pâncreas','Testículo','Ovário','Útero','Gl.Adrenal','Tireoide','Músculo','Pele','Timo','Linfonodo','Medula'];
 window.CORES=['#3fb950','#fbbf24','#60a5fa','#c084fc','#f87171','#34d399'];
 window.SI={solicitado:{l:'Solicitado',c:'s0'},ativo:{l:'Ativo',c:'s1'},processando:{l:'Processando',c:'s2'},concluido:{l:'Concluído',c:'s3'},em_recrutamento:{l:'Em Recrutamento',c:'s4'}};
+window.KANBAN_COLS=[
+  {id:'solicitado',   label:'Solicitado',    color:'#8b949e', icon:'📋'},
+  {id:'avaliacao',    label:'Avaliação',     color:'#58a6ff', icon:'🔍'},
+  {id:'macroscopia',  label:'Macroscopia',   color:'#d29922', icon:'🫀'},
+  {id:'processamento',label:'Processamento', color:'#fb923c', icon:'⚗️'},
+  {id:'inclusao',     label:'Inclusão',      color:'#e879f9', icon:'🧊'},
+  {id:'microtomia',   label:'Microtomia',    color:'#38bdf8', icon:'🔪'},
+  {id:'coloracao',    label:'Coloração',     color:'#4ade80', icon:'🎨'},
+  {id:'analise',      label:'Análise',       color:'#a78bfa', icon:'🔬'},
+  {id:'concluido',    label:'Concluído',     color:'#3fb950', icon:'✅'}
+];
+window.KANBAN_CHECKLIST={
+  avaliacao:    ['Verificar CEUA/CEP','Avaliar técnicas solicitadas','Estimar prazo','Confirmar com pesquisador'],
+  macroscopia:  ['Receber material','Registrar data entrada','Fotografar macroscopia','Selecionar fragmentos','Identificar cassetes'],
+  processamento:['Desidratação','Diafanização','Impregnação em parafina'],
+  inclusao:     ['Inclusão em parafina','Identificar blocos','Armazenar blocos'],
+  microtomia:   ['Cortes seriados (3-5µm)','Estirar em banho-maria','Aderir em lâmina','Secar em estufa'],
+  coloracao:    ['HE rotina','Técnicas especiais','IHQ','Fotografar lâminas'],
+  analise:      ['Análise morfológica','Digitalização (Mica)','Análise QuPath','Relatório'],
+  concluido:    ['Entregar lâminas','Enviar e-mail pesquisador','Arquivar prontuário']
+};
+window._kanbanDrag=null;
+window._kanbanCfg={showAluno:true,showTecs:true,showPrazo:true,showProgress:true};
 window.grps=[];
 window.falcN=32;
 window.etiqCod='';
@@ -822,7 +873,7 @@ window.carregarProjetos = async function(){
           ceua:r.ceua||'',ceuaI:r.ceua_inst||'',ceuaV:r.ceua_vigencia||'',cep:r.cep||'',
           orgaos:r.orgaos||[],tecs:r.tecnicas||[],grps:r.grupos||[],
           st:r.status,ams:r.amostras||[],desc:r.descricao||'',ppg:r.ppg||'',
-          aluno:r.aluno||'',emailAluno:r.email_aluno||'',vincul:r.vinculo||'',_id:r.id};
+          aluno:r.aluno||'',emailAluno:r.email_aluno||'',vincul:r.vinculo||'',orcid:r.orcid||'',orcidAluno:r.orcid_aluno||'',etapa:r.etapa||'',_id:r.id};
       });
     }
   }catch(e){console.warn('Supabase projetos:',e.message);}
@@ -833,7 +884,8 @@ window.salvarProjetoSupa = async function(p){
   if(!supabase) return;
   var row={codigo:p.cod,pesquisador:p.pesq,instituicao:p.inst,email:p.email,descricao:p.desc||'',ppg:p.ppg||'',aluno:p.aluno||'',email_aluno:p.emailAluno||'',vinculo:p.vincul||'',
     origem:p.orig,especie:p.esp,material:p.mat,casos:p.casos,ceua:p.ceua,ceua_inst:p.ceuaI,
-    ceua_vigencia:p.ceuaV,cep:p.cep,orgaos:p.orgaos,tecnicas:p.tecs,grupos:p.grps,status:p.st,amostras:p.ams};
+    ceua_vigencia:p.ceuaV,cep:p.cep,orgaos:p.orgaos,tecnicas:p.tecs,grupos:p.grps,status:p.st,amostras:p.ams,
+    etapa:p.etapa||null};
   try{
     if(p._id) await supabase.from('projetos').update(row).eq('id',p._id);
     else{var res=await supabase.from('projetos').insert(row).select();if(res.data&&res.data[0])p._id=res.data[0].id;}
@@ -890,10 +942,10 @@ window.logAudit = async function(tipo,desc){
 
 // ── NAV ──────────────────────────────────────────────────────
 window.setView = function(v){
-  var vi=document.getElementById('vi'); if(vi) vi.style.display=v==='i'?'flex':'none';
-  var vp=document.getElementById('vp'); if(vp) vp.style.display=v==='p'?'flex':'none';
-  var bi=document.getElementById('bi'); if(bi) bi.classList.toggle('on',v==='i');
-  var bp2=document.getElementById('bp2'); if(bp2) bp2.classList.toggle('on',v==='p');
+  document.getElementById('vi').style.display=v==='i'?'flex':'none';
+  document.getElementById('vp').style.display=v==='p'?'flex':'none';
+  document.getElementById('bi').classList.toggle('on',v==='i');
+  document.getElementById('bp2').classList.toggle('on',v==='p');
 };
 window.goPage = function(p){
   document.querySelectorAll('.pg').forEach(function(e){e.classList.remove('on');});
@@ -902,6 +954,7 @@ window.goPage = function(p){
   var n=document.getElementById('nv-'+p);if(n)n.classList.add('on');
   if(p==='proj') carregarProjetos?carregarProjetos():renderProj();
   if(p==='met'){preencherSelectPesq();renderMetricas();}
+  if(p==='kan')renderKanban();
   if(p==='falc'||p==='etiq') preencherSelects();
   if(p==='etiq') renderPrevPadrao();
   if(p==='ab') carregarAnticorpos?carregarAnticorpos():renderAbTable();
@@ -2045,6 +2098,7 @@ window.usarSemSupabase = function(){
   document.getElementById('setup-overlay').style.display='none';
   toast('Modo demo ativo — dados não serão salvos.');
   renderProj();preencherSelects();preencherSelProd();renderPrevPadrao();renderTecs();renderChipsPub();renderAbTable();
+  loadKanbanData();
 };
 
 // ── INIT ─────────────────────────────────────────────────────
@@ -2768,403 +2822,275 @@ window.buscarOrcidAluno = async function(){
 };
 
 
-// ══════════════════════════════════════════════════════════════
-// INTEGRAÇÃO N8N + NOTIFICAÇÕES + CHIPS DE TÉCNICAS
-// ══════════════════════════════════════════════════════════════
+// ── KANBAN ────────────────────────────────────────────────────
+window._kbChecks = {};  // {cod: {etapa: {task: bool}}}
+window._kbPrazos = {};  // {cod: 'YYYY-MM-DD'}
+window._kbModal  = null;
 
-// ── N8N CONFIG ───────────────────────────────────────────────
-window.N8N_URL = localStorage.getItem('lpp_n8n_url') || '';
-
-window.salvarN8NConfig = function(){
-  var url = (document.getElementById('n8n-url') || {value:''}).value.trim();
-  window.N8N_URL = url;
-  localStorage.setItem('lpp_n8n_url', url);
-  var st = document.getElementById('n8n-status');
-  if(st) st.innerHTML = '<span style="color:var(--gn)">✓ Webhook salvo!</span>';
-  setTimeout(function(){ if(st) st.textContent = ''; }, 3000);
-};
-
-window.notificarN8N = async function(evento, p){
-  var url = window.N8N_URL || localStorage.getItem('lpp_n8n_url');
-  if(!url) return;
+window.loadKanbanData = function(){
   try{
-    var tecs = Array.isArray(p.tecs) ? p.tecs : [];
-    var orgaos = Array.isArray(p.orgaos) ? p.orgaos : [];
-    await fetch(url, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        fonte:'lpp_app', evento:evento,
-        codigo:p.cod, pesquisador:p.pesq, aluno:p.aluno||'',
-        email:p.email||'', email_aluno:p.emailAluno||'',
-        telefone:p.telefone||'', tecnicas:tecs, orgaos:orgaos,
-        status:p.st||'', timestamp:new Date().toISOString()
-      })
-    });
-    console.log('[LPP] n8n notificado:', evento, p.cod);
-  }catch(e){ console.warn('[LPP] n8n webhook falhou:', e.message); }
+    var saved=localStorage.getItem('lpp_kb_checks');
+    if(saved)window._kbChecks=JSON.parse(saved);
+    var prazos=localStorage.getItem('lpp_kb_prazos');
+    if(prazos)window._kbPrazos=JSON.parse(prazos);
+  }catch(e){}
 };
 
-// ── NOTIFICAÇÕES ──────────────────────────────────────────────
-window.carregarNotificacoes = async function(){
-  if(!supabase) return;
-  try{
-    var r = await supabase.from('notificacoes').select('*').order('criado_em',{ascending:false}).limit(50);
-    if(r.data) {
-      renderNotificacoes(r.data);
-      atualizarBadge(r.data);
-    }
-  }catch(e){ console.warn('notif:', e); }
+window.saveKanbanChecks = function(){
+  localStorage.setItem('lpp_kb_checks', JSON.stringify(window._kbChecks));
 };
 
-window.renderNotificacoes = function(lista){
-  var el = document.getElementById('notif-lista');
-  if(!el) return;
-  if(!lista || !lista.length){
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--mu)">🔔 Nenhuma notificação ainda.</div>';
+window.saveKanbanPrazos = function(){
+  localStorage.setItem('lpp_kb_prazos', JSON.stringify(window._kbPrazos));
+};
+
+window.saveKanbanCfg = function(){
+  window._kanbanCfg={
+    showAluno:   document.getElementById('kb-show-aluno')   ? document.getElementById('kb-show-aluno').checked   : true,
+    showTecs:    document.getElementById('kb-show-tecs')    ? document.getElementById('kb-show-tecs').checked    : true,
+    showPrazo:   document.getElementById('kb-show-prazo')   ? document.getElementById('kb-show-prazo').checked   : true,
+    showProgress:document.getElementById('kb-show-progress')? document.getElementById('kb-show-progress').checked: true
+  };
+  renderKanban();
+};
+
+window.toggleKanbanCfg = function(){
+  var p=document.getElementById('kb-cfg-panel');
+  if(!p)return;
+  p.style.display=(p.style.display==='none'||p.style.display==='')?'flex':'none';
+};
+
+window.getKanbanCol = function(p){
+  // Map project to kanban column
+  // Use p.etapa if set, otherwise derive from p.st
+  if(p.etapa) return p.etapa;
+  if(p.st==='concluido')     return 'concluido';
+  if(p.st==='processando')   return 'processamento';
+  if(p.st==='ativo')         return 'avaliacao';
+  if(p.st==='solicitado')    return 'solicitado';
+  if(p.st==='em_recrutamento')return 'macroscopia';
+  return 'solicitado';
+};
+
+window.getKanbanProgress = function(cod, colId){
+  var checks=window._kbChecks[cod]&&window._kbChecks[cod][colId];
+  var tasks=window.KANBAN_CHECKLIST[colId];
+  if(!tasks||!tasks.length)return null;
+  var done=tasks.filter(function(t){return checks&&checks[t];}).length;
+  return{done:done,total:tasks.length};
+};
+
+window.renderKanban = function(){
+  loadKanbanData();
+  var board=document.getElementById('kb-board');
+  if(!board)return;
+  if(!PROJ||!PROJ.length){
+    board.innerHTML='<div style="color:var(--mu);padding:40px;font-size:13px;text-align:center">Nenhum projeto carregado. Acesse a aba Projetos primeiro.</div>';
     return;
   }
-  var icones = {whatsapp:'📱', sistema:'🔔', email:'📧'};
-  el.innerHTML = lista.map(function(n){
-    var diff = Date.now() - new Date(n.criado_em).getTime();
-    var m = Math.floor(diff/60000);
-    var tempo = m < 1 ? 'agora' : m < 60 ? m+'min atras' : m < 1440 ? Math.floor(m/60)+'h atras' : new Date(n.criado_em).toLocaleDateString('pt-BR');
-    var estilo = n.lida ? 'opacity:0.6' : 'border-left:3px solid var(--gn)';
-    return '<div data-nid="'+n.id+'" style="display:flex;gap:12px;padding:12px 15px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .15s;'+estilo+'">'
-      +'<div style="font-size:20px;flex-shrink:0;margin-top:2px">'+(icones[n.origem]||'🔔')+'</div>'
-      +'<div style="flex:1">'
-      +'<div style="font-weight:600;font-size:13px">'+(n.titulo||'')+'</div>'
-      +(n.mensagem?'<div style="font-size:12px;color:var(--mu);margin-top:2px">'+n.mensagem.substring(0,100)+'</div>':'')
-      +(n.projeto?'<div style="font-size:12px;color:var(--mu)">Projeto: <b>'+n.projeto+'</b></div>':'')
-      +'<div style="font-size:11px;color:var(--mu);margin-top:4px">'+tempo+'</div>'
-      +'</div></div>';
-  }).join('');
-  // Adicionar click handlers via JS (evita problemas com aspas)
-  el.querySelectorAll('[data-nid]').forEach(function(div){
-    div.addEventListener('click', function(){ marcarLida(div.getAttribute('data-nid')); });
-  });
-};
-
-window.atualizarBadge = function(lista){
-  var nao_lidas = (lista||[]).filter(function(n){ return !n.lida; }).length;
-  var badge = document.getElementById('notif-badge');
-  if(badge){
-    badge.textContent = nao_lidas > 99 ? '99+' : nao_lidas;
-    badge.style.display = nao_lidas ? 'inline' : 'none';
-  }
-};
-
-window.marcarLida = async function(id){
-  if(!supabase) return;
-  await supabase.from('notificacoes').update({lida:true}).eq('id',id);
-  carregarNotificacoes();
-};
-
-window.marcarTodasLidas = async function(){
-  if(!supabase) return;
-  await supabase.from('notificacoes').update({lida:true}).eq('lida',false);
-  carregarNotificacoes();
-  toast('Todas marcadas como lidas!');
-};
-
-// ── REALTIME NOTIFICAÇÕES ─────────────────────────────────────
-window.iniciarRealtimeNotif = function(){
-  if(!supabase) return;
-  try{
-    supabase.channel('lpp-notif')
-      .on('postgres_changes', {event:'INSERT', schema:'public', table:'notificacoes'}, function(payload){
-        toast('🔔 ' + (payload.new.titulo || 'Nova notificação'));
-        carregarNotificacoes();
-      })
-      .subscribe();
-  }catch(e){ console.warn('realtime:', e); }
-};
-
-// ── CHIPS DE TÉCNICAS — FORMULÁRIO INTERNO ────────────────────
-window.coletarTecnicasSelecionadas = function(){
-  var tecs = [];
-  document.querySelectorAll('#chips-rotina .chip.sel, #chips-especial .chip.sel, #chips-ihq .chip.sel, #chips-if .chip.sel').forEach(function(el){
-    tecs.push(el.textContent.trim());
-  });
-  // Técnicas extras adicionadas via texto livre
-  var extras = document.querySelectorAll('.chip-extra.sel');
-  extras.forEach(function(el){ tecs.push(el.textContent.replace('×','').trim()); });
-  return tecs;
-};
-
-window.adicionarTecExtra = function(){
-  var inp = document.getElementById('tec-extra');
-  if(!inp || !inp.value.trim()) return;
-  var nome = inp.value.trim();
-  var container = document.getElementById('chips-extras');
-  if(!container){
-    // criar container
-    var c = document.createElement('div');
-    c.id = 'chips-extras';
-    c.className = 'chips';
-    c.style.marginTop = '8px';
-    inp.parentNode.parentNode.appendChild(c);
-    container = c;
-  }
-  // Verificar se já existe
-  var existe = false;
-  container.querySelectorAll('.chip-extra').forEach(function(el){
-    if(el.textContent.replace('×','').trim().toLowerCase() === nome.toLowerCase()) existe = true;
-  });
-  if(existe){ toast('Técnica já adicionada.', true); return; }
-  var chip = document.createElement('div');
-  chip.className = 'chip chip-extra sel';
-  chip.style.cssText = 'cursor:pointer;border-color:var(--am);color:var(--am)';
-  chip.textContent = nome;
-  chip.onclick = function(){ chip.classList.toggle('sel'); };
-  container.appendChild(chip);
-  inp.value = '';
-  toast(nome + ' adicionado!');
-};
-
-// ── OVERRIDE salvarProjetoSupa para incluir n8n ───────────────
-var _origSalvarSupa = window.salvarProjetoSupa;
-window.salvarProjetoSupa = async function(p){
-  if(_origSalvarSupa) await _origSalvarSupa(p);
-  // Notificar n8n sobre atualização de status
-  await notificarN8N('status_atualizado', p);
-  // Salvar na tabela notificacoes do Supabase
-  if(supabase && p.st){
-    var titulosStatus = {
-      ativo: '✅ Projeto ativado: '+p.cod,
-      processando: '⚗️ Processamento iniciado: '+p.cod,
-      concluido: '🎉 Projeto concluído: '+p.cod
-    };
-    if(titulosStatus[p.st]){
-      try{
-        await supabase.from('notificacoes').insert({
-          tipo: 'STATUS_'+p.st.toUpperCase(),
-          titulo: titulosStatus[p.st],
-          projeto: p.cod, origem: 'sistema', lida: false
-        });
-      }catch(e){}
-    }
-  }
-};
-
-// ── OVERRIDE ativar para notificar n8n ───────────────────────
-var _origAtivar = window.ativar;
-window.ativar = async function(cod, rowId){
-  if(_origAtivar) _origAtivar(cod, rowId);
-  var p = PROJ.find(function(x){ return x.cod === cod; });
-  if(p){ await notificarN8N('projeto_ativado', p); }
-};
-
-// ── OVERRIDE concluirProjeto para notificar n8n ───────────────
-var _origConcluir = window.concluirProjeto;
-window.concluirProjeto = async function(cod){
-  if(_origConcluir) await _origConcluir(cod);
-  var p = PROJ.find(function(x){ return x.cod === cod; });
-  if(p){ await notificarN8N('projeto_concluido', p); }
-};
-
-// ── PREENCHER CAMPO N8N NAS CONFIGS ──────────────────────────
-window.preencherConfigsN8N = function(){
-  var el = document.getElementById('n8n-url');
-  if(el) el.value = localStorage.getItem('lpp_n8n_url') || '';
-};
-
-// ── PATCH goPage para carregar notificações ──────────────────
-var _goPageOrig = window.goPage;
-if(_goPageOrig) {
-  window.goPage = function(id){
-    _goPageOrig(id);
-    if(id === 'notif') { try{ carregarNotificacoes(); }catch(e){} }
-    if(id === 'cfg')   { try{ preencherConfigsN8N(); }catch(e){} }
-  };
-}
-
-// ── INIT EXTRA ────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function(){
-  // Iniciar realtime quando supabase disponível
-  setTimeout(function(){
-    if(window.supabase && supabase) {
-      iniciarRealtimeNotif();
-      carregarNotificacoes();
-    }
-  }, 2000);
-});
-
-
-// ── MODAL NOVO PROJETO INTERNO ────────────────────────────────
-window._npGrps = [];
-window._npEditId = null;
-
-window.abrirModalNP = function(cod){
-  window._npGrps = [];
-  window._npEditId = null;
-  // Limpar campos
-  ['np-pesq','np-email','np-inst','np-tel','np-aluno','np-emailaluno','np-material','np-casos','np-desc','np-ppg','np-gn'].forEach(function(id){
-    var el = document.getElementById(id); if(el) el.value = '';
-  });
-  document.getElementById('np-especie').value = '';
-  document.getElementById('np-vincul').value = '';
-  // Limpar chips selecionados
-  document.querySelectorAll('#modal-novo-proj .chip.sel').forEach(function(c){ c.classList.remove('sel'); });
-  document.getElementById('np-chips-extra').innerHTML = '';
-  document.getElementById('np-grp-list').innerHTML = '';
-  // Preencher órgãos chips
-  var orgContainer = document.getElementById('np-org-chips');
-  if(orgContainer && !orgContainer.children.length){
-    ORGAOS.forEach(function(o){
-      var d = document.createElement('div'); d.className='chip'; d.textContent=o;
-      d.onclick = function(){ d.classList.toggle('sel'); };
-      orgContainer.appendChild(d);
-    });
-  } else if(orgContainer) {
-    orgContainer.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('sel'); });
-  }
-  // Se editando
-  if(cod){
-    window._npEditId = cod;
-    var p = PROJ.find(function(x){ return x.cod === cod; });
-    if(p){
-      document.getElementById('np-pesq').value = p.pesq||'';
-      document.getElementById('np-email').value = p.email||'';
-      document.getElementById('np-inst').value = p.inst||'';
-      document.getElementById('np-tel').value = p.telefone||'';
-      document.getElementById('np-aluno').value = p.aluno||'';
-      document.getElementById('np-emailaluno').value = p.emailAluno||'';
-      document.getElementById('np-material').value = p.mat||'';
-      document.getElementById('np-casos').value = p.casos||'';
-      document.getElementById('np-desc').value = p.desc||'';
-      document.getElementById('np-ppg').value = p.ppg||'';
-      document.getElementById('np-especie').value = p.esp||'';
-      document.getElementById('np-vincul').value = p.vincul||'';
-      // Marcar órgãos
-      if(orgContainer) orgContainer.querySelectorAll('.chip').forEach(function(c){
-        if((p.orgaos||[]).indexOf(c.textContent) >= 0) c.classList.add('sel');
+  var cfg=window._kanbanCfg;
+  var html='';
+  KANBAN_COLS.forEach(function(col){
+    var projects=PROJ.filter(function(p){return getKanbanCol(p)===col.id;});
+    html+='<div class="kb-col" id="kbc-'+col.id+'" '
+      +'ondragover="event.preventDefault();this.querySelector(\'.kb-col-body\').classList.add(\'drag-over\')" '
+      +'ondragleave="this.querySelector(\'.kb-col-body\').classList.remove(\'drag-over\')" '
+      +'ondrop="onKanbanDrop(event,\''+col.id+'\')">'
+      +'<div class="kb-col-head" style="border-top:2px solid '+col.color+'">'
+      +'<span class="kb-col-icon">'+col.icon+'</span>'
+      +'<span class="kb-col-label" style="color:'+col.color+'">'+col.label+'</span>'
+      +'<span class="kb-col-count">'+projects.length+'</span>'
+      +'</div>'
+      +'<div class="kb-col-body" id="kbb-'+col.id+'">';
+    if(!projects.length){
+      html+='<div class="kb-empty">Sem projetos</div>';
+    } else {
+      projects.forEach(function(p){
+        var prog=getKanbanProgress(p.cod, col.id);
+        var progBar=prog?('<div class="kb-progress"><div class="kb-progress-bar" style="width:'
+          +Math.round(prog.done/prog.total*100)+'%;background:'+col.color+'"></div></div>'
+          +'<div style="font-size:9px;color:var(--mu);margin-top:3px">'+prog.done+'/'+prog.total+' tarefas</div>'):'';
+        var prazo=window._kbPrazos[p.cod];
+        var prazoHtml=cfg.showPrazo&&prazo
+          ?'<div class="kb-prazo">⏱ '+new Date(prazo+'T12:00:00').toLocaleDateString("pt-BR")+'</div>'
+          :(cfg.showPrazo?'<div class="kb-prazo" style="cursor:pointer;color:var(--bl)" onclick="setKanbanPrazo(\''+p.cod+'\')">+ prazo</div>':'');
+        var tecsHtml=cfg.showTecs&&p.tecs&&p.tecs.length
+          ?'<div class="kb-card-tecs">'+p.tecs.slice(0,4).map(function(t){return '<span class="kb-tec">'+t+'</span>';}).join('')
+            +(p.tecs.length>4?'<span class="kb-tec">+'+( p.tecs.length-4)+'</span>':'')+'</div>'
+          :'';
+        var alunoHtml=cfg.showAluno&&p.aluno
+          ?'<div class="kb-card-aluno">👤 '+p.aluno+(p.vincul?' ('+p.vincul+')':'')+'</div>'
+          :'';
+        html+='<div class="kb-card" id="kbcard-'+p.cod+'" draggable="true" '
+          +'ondragstart="onKanbanDragStart(event,\''+p.cod+'\')"  '
+          +'ondragend="event.target.classList.remove(\'dragging\')">'
+          +'<div class="kb-card-cod"><span>'+p.cod+'</span>'
+          +'<span style="font-size:10px;color:'+col.color+'">'+col.icon+'</span>'
+          +'</div>'
+          +'<div class="kb-card-actions">'
+          +'<button class="kb-card-btn" onclick="openKanbanModal(\''+p.cod+'\',\''+col.id+'\')" title="Checklist">☑</button>'
+          +'<button class="kb-card-btn" onclick="verDet(\''+p.cod+'\')" title="Ficha">↗</button>'
+          +'</div>'
+          +'<div class="kb-card-pesq">'+p.pesq+'</div>'
+          +alunoHtml
+          +tecsHtml
+          +prazoHtml
+          +(cfg.showProgress?progBar:'')
+          +'</div>';
       });
-      // Marcar técnicas
-      var allChips = document.querySelectorAll('#np-chips-rotina .chip, #np-chips-especial .chip, #np-chips-ihq .chip, #np-chips-if .chip');
-      allChips.forEach(function(c){
-        if((p.tecs||[]).indexOf(c.textContent.trim()) >= 0) c.classList.add('sel');
-      });
-      // Grupos
-      window._npGrps = (p.grps||[]).map(function(g){ return {n:g.n,q:g.q}; });
-      renderGrpsNP();
     }
-    document.getElementById('modal-np-title').textContent = 'Editar Projeto — '+cod;
-  } else {
-    document.getElementById('modal-np-title').textContent = 'Novo Projeto';
-  }
-  document.getElementById('modal-novo-proj').style.display = 'flex';
-};
-
-window.fecharModalNP = function(){
-  document.getElementById('modal-novo-proj').style.display = 'none';
-};
-
-window.addGrpNP = function(){
-  var n = document.getElementById('np-gn').value.trim();
-  var q = document.getElementById('np-gq').value || '6';
-  if(!n) return;
-  if(window._npGrps.find(function(g){ return g.n.toLowerCase()===n.toLowerCase(); })) return;
-  window._npGrps.push({n:n, q:q});
-  renderGrpsNP();
-  document.getElementById('np-gn').value = '';
-};
-window.addGrpNPR = function(n){ document.getElementById('np-gn').value=n; addGrpNP(); };
-window.remGrpNP = function(i){ window._npGrps.splice(i,1); renderGrpsNP(); };
-window.renderGrpsNP = function(){
-  document.getElementById('np-grp-list').innerHTML = window._npGrps.map(function(g,i){
-    return '<div class="gi"><span style="font-weight:500;font-size:13px">'+g.n+'</span><span class="mo" style="font-size:11px;color:var(--mu)">'+g.q+' amostras</span><button class="gdel" onclick="remGrpNP('+i+')">×</button></div>';
-  }).join('');
-};
-
-window.adicionarTecExtraNP = function(){
-  var inp = document.getElementById('np-tec-extra');
-  if(!inp || !inp.value.trim()) return;
-  var nome = inp.value.trim();
-  var container = document.getElementById('np-chips-extra');
-  var chip = document.createElement('div');
-  chip.className = 'chip sel';
-  chip.style.cssText = 'border-color:var(--am);color:var(--am);cursor:pointer';
-  chip.textContent = nome;
-  chip.onclick = function(){ chip.classList.toggle('sel'); };
-  container.appendChild(chip);
-  inp.value = '';
-};
-
-window.salvarNP = async function(){
-  var pesq = document.getElementById('np-pesq').value.trim();
-  if(!pesq){ toast('Informe o pesquisador.', true); return; }
-  // Coletar técnicas selecionadas
-  var tecs = [];
-  document.querySelectorAll('#np-chips-rotina .chip.sel, #np-chips-especial .chip.sel, #np-chips-ihq .chip.sel, #np-chips-if .chip.sel, #np-chips-extra .chip.sel').forEach(function(c){
-    tecs.push(c.textContent.trim());
+    html+='</div></div>';
   });
-  // Coletar órgãos selecionados
-  var orgaos = [];
-  document.querySelectorAll('#np-org-chips .chip.sel').forEach(function(c){ orgaos.push(c.textContent); });
-  var dados = {
-    pesq: pesq,
-    email: document.getElementById('np-email').value.trim(),
-    inst: document.getElementById('np-inst').value.trim(),
-    telefone: document.getElementById('np-tel').value.trim(),
-    aluno: document.getElementById('np-aluno').value.trim(),
-    emailAluno: document.getElementById('np-emailaluno').value.trim(),
-    esp: document.getElementById('np-especie').value,
-    mat: document.getElementById('np-material').value.trim(),
-    casos: document.getElementById('np-casos').value.trim(),
-    desc: document.getElementById('np-desc').value.trim(),
-    ppg: document.getElementById('np-ppg').value.trim(),
-    vincul: document.getElementById('np-vincul').value,
-    orgaos: orgaos,
-    tecs: tecs,
-    grps: window._npGrps.slice(),
-    ams: []
-  };
-  if(window._npEditId){
-    // Editar
-    var p = PROJ.find(function(x){ return x.cod === window._npEditId; });
-    if(p){ Object.assign(p, dados); await salvarProjetoSupa(p); }
-    toast('Projeto atualizado!');
-  } else {
-    // Novo
-    var cod = await gerarProximoCodigo();
-    var novop = Object.assign({cod:cod, st:'solicitado', orig:'animal'}, dados);
-    PROJ.push(novop);
-    if(supabase){
-      try{
-        var row = {
-          codigo:cod, pesquisador:dados.pesq, instituicao:dados.inst,
-          email:dados.email, aluno:dados.aluno, email_aluno:dados.emailAluno,
-          telefone:dados.telefone, especie:dados.esp, material:dados.mat,
-          casos:dados.casos, descricao:dados.desc, ppg:dados.ppg, vinculo:dados.vincul,
-          orgaos:orgaos, tecnicas:tecs, grupos:dados.grps, amostras:[],
-          status:'solicitado', origem:'manual'
-        };
-        await supabase.from('projetos').insert(row);
-      }catch(e){ console.warn('insert NP:', e); }
-    }
-    toast('Projeto cadastrado! Código: '+cod);
-  }
-  fecharModalNP();
-  await carregarProjetos();
-  renderProj();
-  preencherSelects();
+  board.innerHTML=html;
 };
 
+window.onKanbanDragStart = function(evt, cod){
+  window._kanbanDrag=cod;
+  evt.target.classList.add('dragging');
+  evt.dataTransfer.effectAllowed='move';
+};
 
-// ── AUTO-CONNECT SUPABASE + INIT EXTRA ───────────────────────
-(function(){
-  // Preencher campo de URL no setup-overlay se disponível
-  var suEl = document.getElementById('su-url');
-  var skEl = document.getElementById('su-key');
-  if(suEl && SUPA_URL) suEl.value = SUPA_URL;
-  if(skEl && SUPA_KEY) skEl.value = SUPA_KEY;
+window.onKanbanDrop = function(evt, colId){
+  evt.preventDefault();
+  var cod=window._kanbanDrag;
+  if(!cod)return;
+  // Remove drag-over from all cols
+  document.querySelectorAll('.kb-col-body').forEach(function(el){el.classList.remove('drag-over');});
+  var p=PROJ.find(function(x){return x.cod===cod;});
+  if(!p)return;
+  // Update etapa
+  p.etapa=colId;
+  // Sync main status for terminal states
+  if(colId==='concluido')   p.st='concluido';
+  else if(colId==='solicitado')p.st='solicitado';
+  else if(colId==='processamento'||colId==='inclusao'||colId==='microtomia'||colId==='coloracao')p.st='processando';
+  else p.st='ativo';
+  salvarProjetoSupa(p);
+  logAudit('KANBAN_MOVE', cod+' -> '+colId);
+  renderKanban();
+  toast(cod+' movido para '+colId+'!');
+  window._kanbanDrag=null;
+};
 
-  // Preencher configs n8n quando abrir configurações
-  setTimeout(function(){
-    var n8nEl = document.getElementById('n8n-url');
-    if(n8nEl) n8nEl.value = localStorage.getItem('lpp_n8n_url') || '';
-  }, 500);
-})();
+window.setKanbanPrazo = function(cod){
+  var atual=window._kbPrazos[cod]||'';
+  var novo=prompt('Prazo para '+cod+' (AAAA-MM-DD):',atual);
+  if(novo===null)return;
+  if(novo)window._kbPrazos[cod]=novo;
+  else delete window._kbPrazos[cod];
+  saveKanbanPrazos();
+  renderKanban();
+};
+
+window.openKanbanModal = function(cod, colId){
+  var p=PROJ.find(function(x){return x.cod===cod;});
+  if(!p)return;
+  if(!window._kbChecks[cod])window._kbChecks[cod]={};
+  if(!window._kbChecks[cod][colId])window._kbChecks[cod][colId]={};
+  var checks=window._kbChecks[cod][colId];
+  var col=KANBAN_COLS.find(function(c){return c.id===colId;})||{label:colId,color:'var(--bl)',icon:''};
+  var defaultTasks=KANBAN_CHECKLIST[colId]||[];
+  // Merge default + custom tasks
+  var customKey='_custom_'+cod+'_'+colId;
+  var customTasks=[];
+  try{var ct=localStorage.getItem(customKey);if(ct)customTasks=JSON.parse(ct);}catch(e){}
+  var allTasks=defaultTasks.concat(customTasks);
+  var checkHtml=allTasks.length
+    ?allTasks.map(function(t,i){
+      var cid='kbck_'+i;
+      return '<div class="kb-check-item">'
+        +'<input type="checkbox" id="'+cid+'" '+(checks[t]?'checked':'')
+        +' onchange="toggleKanbanCheck(\''+cod+'\',\''+colId+'\','+JSON.stringify(t)+',this.checked)">'
+        +'<label for="'+cid+'">'+t+'</label>'
+        +'</div>';
+    }).join('')
+    :'<div class="kb-empty">Sem tarefas para esta etapa</div>';
+  var prog=getKanbanProgress(cod,colId);
+  var progBar=prog?'<div class="kb-progress" style="height:5px;margin-bottom:14px"><div class="kb-progress-bar" style="width:'+Math.round(prog.done/prog.total*100)+'%;background:'+col.color+'"></div></div>':'';
+  var prazo=window._kbPrazos[cod]?'<input type="date" id="kb-modal-prazo" value="'+window._kbPrazos[cod]+'" onchange="saveKanbanModalPrazo(\''+cod+'\')" style="background:var(--bg);border:0.5px solid var(--bd);border-radius:5px;padding:4px 8px;color:var(--tx);font-size:12px">':'<input type="date" id="kb-modal-prazo" onchange="saveKanbanModalPrazo(\''+cod+'\')" style="background:var(--bg);border:0.5px solid var(--bd);border-radius:5px;padding:4px 8px;color:var(--tx);font-size:12px">';
+  var modal=document.createElement('div');
+  modal.className='kb-modal';
+  modal.id='kb-modal';
+  modal.onclick=function(e){if(e.target===modal)closeKanbanModal();};
+  modal.innerHTML='<div class="kb-modal-box">'
+    +'<div class="kb-modal-title">'
+    +'<span>'+col.icon+' '+p.cod+' — '+col.label+'</span>'
+    +'<button onclick="closeKanbanModal()" style="background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer">×</button>'
+    +'</div>'
+    +'<div style="font-size:13px;font-weight:500;color:var(--tx);margin-bottom:3px">'+p.pesq+'</div>'
+    +(p.aluno?'<div style="font-size:11px;color:var(--pu);margin-bottom:10px">'+p.aluno+'</div>':'')
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
+    +'<span style="font-size:11px;color:var(--mu)">⏱ Prazo:</span>'+prazo
+    +'</div>'
+    +progBar
+    +'<div style="font-size:10px;color:var(--mu);letter-spacing:1px;margin-bottom:8px">CHECKLIST — '+col.label.toUpperCase()+'</div>'
+    +'<div id="kb-modal-checks">'+checkHtml+'</div>'
+    +'<div class="kb-add-task" style="margin-top:12px">'
+    +'<input id="kb-new-task" placeholder="+ Nova tarefa..." onkeydown="if(event.key===\'Enter\')addKanbanTask(\''+cod+'\',\''+colId+'\')">'
+    +'<button class="btn btg bsm" onclick="addKanbanTask(\''+cod+'\',\''+colId+'\')">Adicionar</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">'
+    +'<button class="btn bto bsm" onclick="closeKanbanModal()">Fechar</button>'
+    +'<button class="btn btg bsm" onclick="avancarEtapa(\''+cod+'\',\''+colId+'\')">Avançar etapa →</button>'
+    +'</div>'
+    +'</div>';
+  document.body.appendChild(modal);
+  window._kbModal={cod:cod,colId:colId,customKey:customKey,customTasks:customTasks};
+};
+
+window.closeKanbanModal = function(){
+  var m=document.getElementById('kb-modal');
+  if(m)m.remove();
+  window._kbModal=null;
+  renderKanban();
+};
+
+window.toggleKanbanCheck = function(cod,colId,task,checked){
+  if(!window._kbChecks[cod])window._kbChecks[cod]={};
+  if(!window._kbChecks[cod][colId])window._kbChecks[cod][colId]={};
+  window._kbChecks[cod][colId][task]=checked;
+  saveKanbanChecks();
+};
+
+window.saveKanbanModalPrazo = function(cod){
+  var inp=document.getElementById('kb-modal-prazo');
+  if(!inp)return;
+  if(inp.value)window._kbPrazos[cod]=inp.value;
+  else delete window._kbPrazos[cod];
+  saveKanbanPrazos();
+};
+
+window.addKanbanTask = function(cod,colId){
+  var inp=document.getElementById('kb-new-task');
+  if(!inp||!inp.value.trim())return;
+  var task=inp.value.trim();
+  inp.value='';
+  if(!window._kbModal)return;
+  window._kbModal.customTasks.push(task);
+  localStorage.setItem(window._kbModal.customKey,JSON.stringify(window._kbModal.customTasks));
+  // Re-open modal to refresh
+  closeKanbanModal();
+  setTimeout(function(){openKanbanModal(cod,colId);},50);
+};
+
+window.avancarEtapa = function(cod,colId){
+  var idx=KANBAN_COLS.findIndex(function(c){return c.id===colId;});
+  if(idx<0||idx>=KANBAN_COLS.length-1){toast('Já está na última etapa!');return;}
+  var nextCol=KANBAN_COLS[idx+1].id;
+  closeKanbanModal();
+  onKanbanDrop({preventDefault:function(){}},nextCol);
+  // Re-trigger since _kanbanDrag must be set
+  var p=PROJ.find(function(x){return x.cod===cod;});
+  if(!p)return;
+  p.etapa=nextCol;
+  if(nextCol==='concluido')p.st='concluido';
+  else if(nextCol==='processamento'||nextCol==='inclusao'||nextCol==='microtomia'||nextCol==='coloracao')p.st='processando';
+  else p.st='ativo';
+  salvarProjetoSupa(p);
+  logAudit('KANBAN_ADVANCE',cod+' -> '+nextCol);
+  renderKanban();
+  toast(cod+' avançado para '+KANBAN_COLS[idx+1].label+'!');
+};
 
 </script>
 
@@ -3277,157 +3203,6 @@ window.salvarNP = async function(){
     <div style="padding:11px 16px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px">
       <button class="btn bto" onclick="fecharAbModal()">Cancelar</button>
       <button class="btn btg" onclick="salvarAb()">Salvar Anticorpo</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- MODAL NOVO PROJETO INTERNO -->
-<div id="modal-novo-proj" style="display:none;position:fixed;inset:0;background:#000c;z-index:400;align-items:center;justify-content:center">
-  <div style="background:var(--pn);border:1px solid var(--bd);border-radius:12px;width:720px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column">
-    <div style="padding:13px 16px;background:var(--p2);border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
-      <span id="modal-np-title" style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--bl)">Novo Projeto</span>
-      <button onclick="fecharModalNP()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:18px">✕</button>
-    </div>
-    <div style="overflow-y:auto;flex:1;padding:16px">
-      <form id="form-np" onsubmit="return false">
-        <input type="hidden" id="np-edit-id">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:5px">
-          <div class="f"><label>PESQUISADOR *</label><input id="np-pesq" placeholder="Prof. Dr. Nome Sobrenome"></div>
-          <div class="f"><label>E-MAIL DO PESQUISADOR</label><input id="np-email" type="email" placeholder="pesquisador@instituicao.br"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:5px">
-          <div class="f"><label>INSTITUIÇÃO</label><input id="np-inst" placeholder="USP, UFRGS, UFCSPA…"></div>
-          <div class="f"><label>TELEFONE WHATSAPP</label><input id="np-tel" placeholder="5551999990000"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:5px">
-          <div class="f"><label>ALUNO / COLABORADOR</label><input id="np-aluno" placeholder="Nome do aluno"></div>
-          <div class="f"><label>E-MAIL DO ALUNO</label><input id="np-emailaluno" type="email" placeholder="aluno@edu.br"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:5px">
-          <div class="f"><label>ESPÉCIE</label>
-            <select id="np-especie">
-              <option value="">Selecionar</option>
-              <option>Humano</option>
-              <option>Rato Wistar</option>
-              <option>Rato Sprague-Dawley</option>
-              <option>Camundongo C57BL/6</option>
-              <option>Camundongo BALB/c</option>
-              <option>Coelho</option>
-              <option>Outro</option>
-            </select>
-          </div>
-          <div class="f"><label>MATERIAL</label><input id="np-material" placeholder="Bloco de parafina, corte…"></div>
-          <div class="f"><label>N° CASOS / ANIMAIS</label><input id="np-casos" type="number" placeholder="ex: 30"></div>
-        </div>
-
-        <!-- ÓRGÃOS -->
-        <div class="f"><label>ÓRGÃOS / FRAGMENTOS</label></div>
-        <div style="background:var(--p2);border:1px solid var(--bd);border-radius:8px;padding:13px;margin-bottom:13px">
-          <div class="chips" id="np-org-chips"></div>
-        </div>
-
-        <!-- TÉCNICAS COM CHIPS -->
-        <div style="background:var(--p2);border:1px solid var(--bd);border-radius:8px;padding:13px;margin-bottom:13px">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gn);letter-spacing:2px;margin-bottom:9px">COLORAÇÕES DE ROTINA</div>
-          <div class="chips" id="np-chips-rotina">
-            <div class="chip" onclick="this.classList.toggle('sel')">HE</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">PAS</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Masson</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Picrossirius</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Van Gieson</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Gomori</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Reticulina</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Azul de Toluidina</div>
-          </div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--am);letter-spacing:2px;margin:11px 0 9px">COLORAÇÕES ESPECIAIS</div>
-          <div class="chips" id="np-chips-especial">
-            <div class="chip" onclick="this.classList.toggle('sel')">WVG</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">PTAH</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Azan</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Alcian Blue</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Perls (Ferro)</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Grocott</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">GMS</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Ziehl-Neelsen</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">Vermelho Congô</div>
-            <div class="chip" onclick="this.classList.toggle('sel')">TUNEL</div>
-          </div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pu);letter-spacing:2px;margin:11px 0 9px">IHQ — IMUNOISTOQUÍMICA</div>
-          <div class="chips" id="np-chips-ihq">
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">Ki-67</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">PD-L1</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">CD3</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">CD8</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">CD20</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">CD31</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">CD68</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">GFAP</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">Vimentina</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">p53</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">α-SMA</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">TGF-β1</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">TNF-α</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">COX-2</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">Caspase-3</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#3a1a7a;color:var(--pu)">Bcl-2</div>
-          </div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--bl);letter-spacing:2px;margin:11px 0 9px">IF — IMUNOFLUORESCÊNCIA</div>
-          <div class="chips" id="np-chips-if">
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#1a3050;color:var(--bl)">DAPI</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#1a3050;color:var(--bl)">F-actina</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#1a3050;color:var(--bl)">ZO-1</div>
-            <div class="chip" onclick="this.classList.toggle('sel')" style="border-color:#1a3050;color:var(--bl)">E-caderina</div>
-          </div>
-          <div style="margin-top:11px;display:flex;gap:8px;align-items:flex-end">
-            <div class="f" style="flex:1;margin:0"><label>OUTRA TÉCNICA</label>
-              <input id="np-tec-extra" placeholder="Ex: FISH, Hibridização in situ, Elisa tecidual…" onkeydown="if(event.key==='Enter'){adicionarTecExtraNP();event.preventDefault()}">
-            </div>
-            <button class="btn bto bsm" onclick="adicionarTecExtraNP()" style="margin-bottom:0">+ Adicionar</button>
-          </div>
-          <div id="np-chips-extra" class="chips" style="margin-top:8px"></div>
-        </div>
-
-        <!-- GRUPOS EXPERIMENTAIS -->
-        <div style="background:var(--p2);border:1px solid var(--bd);border-radius:8px;padding:13px;margin-bottom:13px">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--bl);letter-spacing:2px;margin-bottom:11px">GRUPOS EXPERIMENTAIS</div>
-          <div id="np-grp-list"></div>
-          <div style="display:flex;gap:7px;align-items:flex-end;margin-top:7px">
-            <div class="f" style="flex:1;margin:0"><label>NOME DO GRUPO</label>
-              <input id="np-gn" placeholder="Controle, Tratado…" onkeydown="if(event.key==='Enter'){addGrpNP();event.preventDefault()}">
-            </div>
-            <div class="f" style="width:95px;margin:0"><label>Nº AMOSTRAS</label>
-              <input id="np-gq" type="number" value="6" min="1">
-            </div>
-            <button class="btn bto" onclick="addGrpNP()" style="margin-bottom:0">+ Grupo</button>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:9px">
-            <button class="btn bto bsm" onclick="addGrpNPR('Controle')">Controle</button>
-            <button class="btn bto bsm" onclick="addGrpNPR('Tratado')">Tratado</button>
-            <button class="btn bto bsm" onclick="addGrpNPR('Sham')">Sham</button>
-            <button class="btn bto bsm" onclick="addGrpNPR('Controle Positivo')">C. Positivo</button>
-            <button class="btn bto bsm" onclick="addGrpNPR('Veículo')">Veículo</button>
-          </div>
-        </div>
-
-        <div class="f"><label>DESCRIÇÃO / OBJETIVO</label>
-          <textarea id="np-desc" rows="2" placeholder="Objetivo do estudo…" style="width:100%;background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:8px 11px;color:var(--tx);font-size:13px;resize:vertical;font-family:inherit"></textarea>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
-          <div class="f"><label>PPG / PROGRAMA</label><input id="np-ppg" placeholder="PPG em Patologia — UFCSPA"></div>
-          <div class="f"><label>VÍNCULO DO ALUNO</label>
-            <select id="np-vincul">
-              <option value="">Selecionar</option>
-              <option>IC</option><option>Mestrando</option><option>Doutorando</option>
-              <option>Pós-Doutorando</option><option>Técnico de Laboratório</option><option>Médico Residente</option>
-            </select>
-          </div>
-        </div>
-      </form>
-    </div>
-    <div style="padding:11px 16px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px">
-      <button class="btn bto" onclick="fecharModalNP()">Cancelar</button>
-      <button class="btn btg" onclick="salvarNP()">Salvar Projeto</button>
     </div>
   </div>
 </div>
