@@ -2052,7 +2052,7 @@ window.salvarConfig = function(){
   localStorage.setItem('lpp_supa_url',url);localStorage.setItem('lpp_supa_key',key);
   window.SUPA_URL=url;window.SUPA_KEY=key;
   if(initSupabase()){
-    document.getElementById('setup-overlay').style.display='none';toast('Supabase conectado!');
+    var so=document.getElementById('setup-overlay');if(so)so.style.display='none';toast('Supabase conectado!');
     carregarProjetos();carregarAnticorpos();
   }else{toast('Erro ao conectar. Verifique a URL e a chave.',true);}
 };
@@ -2113,7 +2113,7 @@ window.usarSemSupabase = function(){
     document.getElementById('setup-overlay').style.display='none';
     carregarProjetos();carregarAnticorpos();
   }else{
-    document.getElementById('setup-overlay').style.display='flex';
+    var so2=document.getElementById('setup-overlay');if(so2)so2.style.display='flex';
     renderProj();preencherSelects();preencherSelProd();renderPrevPadrao();
   }
 })();
