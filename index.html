@@ -198,6 +198,23 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
 .kb-add-task{display:flex;gap:7px;margin-top:10px}
 .kb-add-task input{flex:1;background:var(--bg);border:0.5px solid var(--bd);border-radius:5px;padding:5px 8px;color:var(--tx);font-size:12px}
 .kb-empty{font-size:11px;color:var(--mu);text-align:center;padding:20px 0;font-style:italic}
+
+.kb-urgente{border-left:3px solid #f85149!important;background:#1a0a0a!important}
+.kb-urgente .kb-card-cod::after{content:'🔴 URGENTE';font-size:9px;color:#f85149;font-weight:700;margin-left:6px;letter-spacing:1px}
+.kb-urgente:hover{box-shadow:0 4px 16px rgba(248,81,73,0.3)!important}
+.kb-badge-urg{background:#f85149;color:#fff;font-size:9px;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:0.5px;margin-left:6px}
+.kb-toggle{display:flex;gap:0;background:var(--p2);border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-right:8px}
+.kb-toggle button{padding:5px 14px;font-size:11px;font-weight:500;border:none;background:none;color:var(--mu);cursor:pointer}
+.kb-toggle button.active{background:var(--bl);color:#fff}
+.sem-board{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:0 16px 16px}
+.sem-col{background:var(--p2);border:0.5px solid var(--bd);border-radius:10px;min-height:300px;display:flex;flex-direction:column}
+.sem-col-head{padding:10px 12px;border-bottom:0.5px solid var(--bd);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.sem-col-body{flex:1;padding:8px;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.sem-col-body.drag-over{background:var(--bd);outline:2px dashed var(--bl)}
+.sem-card{background:var(--bg);border:0.5px solid var(--bd);border-radius:7px;padding:8px 10px;cursor:grab;font-size:12px}
+.sem-card.dragging{opacity:0.4}
+.sem-card-urgente{border-left:3px solid #f85149!important;background:#1a0a0a!important}
+.sem-hoje .sem-col-head{border-top:2px solid var(--bl)}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -422,20 +439,35 @@ pre{background:var(--p2);border:1px solid var(--bd);border-radius:7px;padding:12
 
       <div class="pg" id="pg-kan">
         <div class="pgh" style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:15px;font-weight:700">🗂️ Kanban — Fluxo Histopatológico</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:15px;font-weight:700">🗂️ Kanban</div>
+            <div class="kb-toggle">
+              <button id="kbt-fluxo" class="active" onclick="setKanbanView('fluxo')">Fluxo Histopatológico</button>
+              <button id="kbt-semana" onclick="setKanbanView('semana')">📅 Semana</button>
+            </div>
+          </div>
           <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn bto bsm" onclick="toggleKanbanCfg()">⚙️ Campos</button>
-            <button class="btn bto bsm" onclick="renderKanban()">↻ Atualizar</button>
+            <button class="btn bto bsm" onclick="toggleKanbanCfg()" id="btn-kb-campos">⚙️ Campos</button>
+            <button class="btn bto bsm" onclick="refreshKanbanView()">↻ Atualizar</button>
           </div>
         </div>
-        <div id="kb-cfg-panel" style="display:none;background:var(--p2);border:0.5px solid var(--bd);border-radius:8px;padding:12px;margin:0 16px 12px;display:flex;gap:16px;flex-wrap:wrap">
+        <div id="kb-cfg-panel" style="display:none;background:var(--p2);border:0.5px solid var(--bd);border-radius:8px;padding:12px;margin:0 16px 12px;gap:16px;flex-wrap:wrap">
           <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="kb-show-aluno" checked onchange="saveKanbanCfg()"> Aluno</label>
           <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="kb-show-tecs" checked onchange="saveKanbanCfg()"> Técnicas</label>
           <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="kb-show-prazo" checked onchange="saveKanbanCfg()"> Prazo</label>
           <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="kb-show-progress" checked onchange="saveKanbanCfg()"> Progresso</label>
         </div>
-        <div style="padding:0 16px">
+        <!-- FLUXO VIEW -->
+        <div id="kb-view-fluxo" style="padding:0 16px">
           <div class="kb-board" id="kb-board"></div>
+        </div>
+        <!-- SEMANA VIEW -->
+        <div id="kb-view-semana" style="display:none">
+          <div style="padding:0 16px 10px;font-size:11px;color:var(--mu)">
+            Arraste projetos para os dias da semana. Urgentes sempre primeiro.
+            <span id="sem-week-label" style="margin-left:10px;color:var(--bl);font-weight:500"></span>
+          </div>
+          <div class="sem-board" id="sem-board"></div>
         </div>
       </div>
 
@@ -779,7 +811,7 @@ window.PROJ_LOCAL = [
   {cod:'SR-25',etapa:'analise',pesq:'Prof. Dr. João Neves',inst:'USP — Neurociência',email:'j.neves@usp.br',orcid:'0000-0001-5109-3700',orig:'animal',esp:'Camundongo C57BL/6',ceua:'CEUA/USP 8891/2024',ceuaI:'CEUA-USP',ceuaV:'até 06/2026',orgaos:['Cérebro','Cerebelo','Medula'],tecs:['HE','Luxol Fast Blue','CD3'],grps:[{n:'WT Controle',q:6},{n:'KO Tratado',q:6}],st:'processando',ams:[],desc:'Investigar o papel do gene GFAP-KO na neuroinflamação em modelo murino de encefalomielite autoimune experimental.',ppg:'PPG em Neurociências — USP',aluno:'Laura Fernandes',vincul:'Doutoranda',emailAluno:'l.fernandes@usp.br'},
   {cod:'SS-25',etapa:'coloracao',pesq:'Dra. Marina Rocha',inst:'UNESP — Hepatologia',email:'m.rocha@unesp.br',orcid:'0000-0003-4060-7360',orig:'animal',esp:'Rato Sprague-Dawley',ceua:'CEUA/UNESP 5544/2024',ceuaI:'CEUA-UNESP',ceuaV:'até 03/2026',orgaos:['Fígado','Pâncreas','Baço'],tecs:['HE','PAS','Masson','CD68','TGF-b1'],grps:[{n:'Controle',q:8},{n:'Cirrose',q:8},{n:'Tratado',q:8}],st:'ativo',ams:[],desc:'Estudar o efeito protetor do extrato de cúrcuma na fibrose hepática induzida por CCl₄ em ratos.',ppg:'PPG em Hepatologia — UNESP',aluno:'Carlos Pinto',vincul:'Mestrando',emailAluno:'c.pinto@unesp.br'},
   {cod:'SP-24',etapa:'concluido',pesq:'Dra. Priya Venkat',inst:'UNICAMP — Oncologia',email:'p.venkat@unicamp.br',orcid:'0000-0002-1825-0097',orig:'humana',esp:'',mat:'Biópsia excisional',casos:'45',cep:'CAAE 33221100.4.0000.5404',orgaos:['Mama','Linfonodo'],tecs:['HE','Ki-67','p53','CD31'],grps:[{n:'Luminal A',q:15},{n:'Triplo Negativo',q:15},{n:'Saudável',q:15}],st:'concluido',ams:[],desc:'Caracterizar marcadores de proliferação e angiogênese em subtipos moleculares de carcinoma mamário em biópsias humanas.',ppg:'PPG em Oncologia — UNICAMP',aluno:'Beatriz Souza',vincul:'Doutoranda',emailAluno:'b.souza@unicamp.br'},
-  {cod:'SU-26',etapa:'processamento',pesq:'Prof. Dr. Ricardo Alves',inst:'USP — Farmacologia',email:'r.alves@usp.br',orcid:'0000-0001-5109-3700',orig:'animal',esp:'Rato Wistar',ceua:'CEUA/USP 1122/2026',ceuaI:'CEUA-USP',ceuaV:'até 12/2026',orgaos:['Fígado','Rim'],tecs:['HE','Masson'],grps:[{n:'Controle',q:6},{n:'Tratado',q:6}],st:'solicitado',ams:[],desc:'',ppg:'',aluno:'',vincul:'',emailAluno:''},
+  {cod:'SU-26',etapa:'processamento',urgente:true,pesq:'Prof. Dr. Ricardo Alves',inst:'USP — Farmacologia',email:'r.alves@usp.br',orcid:'0000-0001-5109-3700',orig:'animal',esp:'Rato Wistar',ceua:'CEUA/USP 1122/2026',ceuaI:'CEUA-USP',ceuaV:'até 12/2026',orgaos:['Fígado','Rim'],tecs:['HE','Masson'],grps:[{n:'Controle',q:6},{n:'Tratado',q:6}],st:'solicitado',ams:[],desc:'',ppg:'',aluno:'',vincul:'',emailAluno:''},
   {cod:'ST-26',etapa:'microtomia',pesq:'Dra. Patrícia Lima',inst:'UNICAMP — Oncologia',email:'p.lima@unicamp.br',orcid:'0000-0002-4791-8015',orig:'humana',esp:'',mat:'Biópsia excisional',casos:'30',cep:'CEP CAAE 9988/2025',orgaos:['Mama','Linfonodo'],tecs:['HE','Ki-67','p53'],grps:[{n:'Luminal A',q:10},{n:'Triplo Negativo',q:10}],st:'solicitado',ams:[],desc:'',ppg:'',aluno:'',vincul:'',emailAluno:''},
   {cod:'SV-26',etapa:'avaliacao',pesq:'Prof. Dr. André Teixeira',inst:'UFRGS — Reumatologia',email:'a.teixeira@ufrgs.br',orcid:'0000-0001-5109-3700',orcid:'0000-0003-4060-7360',orig:'humana',esp:'',mat:'Biópsia sinovial',casos:'?',cep:'CEP CAAE 7721/2025',orgaos:['Sinóvia','Linfonodo'],tecs:['HE','CD3','CD68','IL-6'],grps:[{n:'AR ativa',q:'?',aberta:true},{n:'Controle',q:'?',aberta:true}],st:'em_recrutamento',ams:['A01','A02','A03'],desc:'Caracterizar infiltrado inflamatório sinovial em pacientes com artrite reumatoide ativa vs remissão — coorte sendo montada.',ppg:'PPG em Reumatologia — UFRGS',aluno:'Sofia Almeida',vincul:'Doutoranda',emailAluno:'s.almeida@ufrgs.br'}
 ];
@@ -882,7 +914,7 @@ window.carregarProjetos = async function(){
           ceua:r.ceua||'',ceuaI:r.ceua_inst||'',ceuaV:r.ceua_vigencia||'',cep:r.cep||'',
           orgaos:r.orgaos||[],tecs:r.tecnicas||[],grps:r.grupos||[],
           st:r.status,ams:r.amostras||[],desc:r.descricao||'',ppg:r.ppg||'',
-          aluno:r.aluno||'',emailAluno:r.email_aluno||'',vincul:r.vinculo||'',orcid:r.orcid||'',orcidAluno:r.orcid_aluno||'',etapa:r.etapa||'',_id:r.id};
+          aluno:r.aluno||'',emailAluno:r.email_aluno||'',vincul:r.vinculo||'',orcid:r.orcid||'',orcidAluno:r.orcid_aluno||'',etapa:r.etapa||'',urgente:r.urgente||false,_id:r.id};
       });
     }
   }catch(e){console.warn('Supabase projetos:',e.message);}
@@ -894,7 +926,7 @@ window.salvarProjetoSupa = async function(p){
   var row={codigo:p.cod,pesquisador:p.pesq,instituicao:p.inst,email:p.email,descricao:p.desc||'',ppg:p.ppg||'',aluno:p.aluno||'',email_aluno:p.emailAluno||'',vinculo:p.vincul||'',
     origem:p.orig,especie:p.esp,material:p.mat,casos:p.casos,ceua:p.ceua,ceua_inst:p.ceuaI,
     ceua_vigencia:p.ceuaV,cep:p.cep,orgaos:p.orgaos,tecnicas:p.tecs,grupos:p.grps,status:p.st,amostras:p.ams,
-    etapa:p.etapa||null};
+    etapa:p.etapa||null,urgente:p.urgente||false};
   try{
     if(p._id) await supabase.from('projetos').update(row).eq('id',p._id);
     else{var res=await supabase.from('projetos').insert(row).select();if(res.data&&res.data[0])p._id=res.data[0].id;}
@@ -2030,6 +2062,172 @@ window.drawBubbles2 = function(){
   });
 };
 
+// ── KANBAN SEMANAL ────────────────────────────────────────────
+window._semData = {};   // {cod: 'seg'|'ter'|'qua'|'qui'|'sex'|null}
+window._semDrag = null;
+
+window.loadSemData = function(){
+  try{
+    var s=localStorage.getItem('lpp_semana');
+    if(s)window._semData=JSON.parse(s);
+  }catch(e){}
+};
+
+window.saveSemData = function(){
+  localStorage.setItem('lpp_semana',JSON.stringify(window._semData));
+};
+
+window.renderSemana = function(){
+  loadSemData();
+  var board=document.getElementById('sem-board');
+  if(!board)return;
+
+  // Week label
+  var hoje=new Date();
+  var diaSem=hoje.getDay(); // 0=dom
+  var seg=new Date(hoje);
+  seg.setDate(hoje.getDate()-(diaSem===0?6:diaSem-1));
+  var sex=new Date(seg); sex.setDate(seg.getDate()+4);
+  var fmtBR=function(d){return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});};
+  var wlabel=document.getElementById('sem-week-label');
+  if(wlabel) wlabel.textContent='Semana: '+fmtBR(seg)+' – '+fmtBR(sex);
+
+  var DIAS=[
+    {id:'seg',label:'Segunda',date:new Date(seg)},
+    {id:'ter',label:'Terça',  date:new Date(seg.getTime()+86400000)},
+    {id:'qua',label:'Quarta', date:new Date(seg.getTime()+86400000*2)},
+    {id:'qui',label:'Quinta', date:new Date(seg.getTime()+86400000*3)},
+    {id:'sex',label:'Sexta',  date:new Date(seg.getTime()+86400000*4)},
+  ];
+
+  // Projetos ativos (não concluídos)
+  var ativos=PROJ.filter(function(p){return p.st!=='concluido';})
+    .sort(function(a,b){
+      if(a.urgente&&!b.urgente)return -1;
+      if(!a.urgente&&b.urgente)return 1;
+      return a.cod.localeCompare(b.cod);
+    });
+
+  // "Não alocados" — projetos sem dia definido nesta semana
+  var naoAlocados=ativos.filter(function(p){return !window._semData[p.cod];});
+
+  var html='';
+  // Não alocados strip at top (before the 5-day grid — inject via separate div)
+  var stripHtml='';
+  if(naoAlocados.length){
+    stripHtml='<div style="padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:7px;align-items:center">'
+      +'<span style="font-size:10px;color:var(--mu);letter-spacing:1px;margin-right:4px">A ALOCAR:</span>'
+      +naoAlocados.map(function(p){
+        var isUrg=p.urgente;
+        return '<div style="background:var(--p2);border:1px solid '+(isUrg?'#f85149':'var(--bd)')
+          +';border-radius:6px;padding:5px 10px;font-size:11px;cursor:grab;display:flex;align-items:center;gap:6px" '
+          +'draggable="true" '
+          +'ondragstart="onSemDragStart(event,\''+p.cod+'\')" '
+          +'ondragend="this.style.opacity=\'1\'">'
+          +(isUrg?'<span style="color:#f85149;font-weight:700;font-size:10px">🔴</span>':'')
+          +'<span style="font-family:monospace;font-weight:700;color:var(--bl)">'+p.cod+'</span>'
+          +'<span style="color:var(--mu)">'+p.pesq.split(' ').slice(-1)[0]+'</span>'
+          +(getKanbanCol(p)!=='solicitado'?'<span style="font-size:9px;color:var(--mu)">'+getKanbanCol(p)+'</span>':'')
+          +'</div>';
+      }).join('')
+      +'</div>';
+  }
+
+  // Day columns
+  DIAS.forEach(function(dia){
+    var isHoje=dia.date.toDateString()===hoje.toDateString();
+    var projDia=ativos.filter(function(p){return window._semData[p.cod]===dia.id;})
+      .sort(function(a,b){
+        if(a.urgente&&!b.urgente)return -1;
+        if(!a.urgente&&b.urgente)return 1;
+        return 0;
+      });
+    html+='<div class="sem-col'+(isHoje?' sem-hoje':'')+'" '
+      +'ondragover="event.preventDefault();this.querySelector(\'.sem-col-body\').classList.add(\'drag-over\')" '
+      +'ondragleave="this.querySelector(\'.sem-col-body\').classList.remove(\'drag-over\')" '
+      +'ondrop="onSemDrop(event,\''+dia.id+'\')">'
+      +'<div class="sem-col-head" style="'+(isHoje?'color:var(--bl);border-top:2px solid var(--bl)':'')+'">'
+      +'<span>'+dia.label+'</span>'
+      +'<span style="font-size:10px;color:var(--mu)">'+fmtBR(dia.date)+'</span>'
+      +'</div>'
+      +'<div class="sem-col-body" id="semcol-'+dia.id+'">';
+    if(!projDia.length){
+      html+='<div style="font-size:11px;color:var(--mu);text-align:center;padding:16px 0;font-style:italic">Livre</div>';
+    } else {
+      projDia.forEach(function(p,ord){
+        var isUrg=p.urgente;
+        var etapa=getKanbanCol(p);
+        var col=KANBAN_COLS.find(function(c){return c.id===etapa;})||{color:'var(--mu)',icon:'📋'};
+        html+='<div class="sem-card'+(isUrg?' sem-card-urgente':'')+'" '
+          +'draggable="true" '
+          +'ondragstart="onSemDragStart(event,\''+p.cod+'\')" '
+          +'ondragend="this.style.opacity=\'1\'">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+          +'<span style="font-family:monospace;font-size:11px;font-weight:700;color:var(--bl)">'+p.cod
+          +(isUrg?'<span class="kb-badge-urg" style="margin-left:4px">🔴</span>':'')+'</span>'
+          +'<div style="display:flex;gap:3px">'
+          +'<button onclick="moverSemana(\''+p.cod+'\',\'cima\',\''+dia.id+'\')" title="Subir" '
+          +'style="background:none;border:none;cursor:pointer;color:var(--mu);font-size:10px;padding:0 2px">▲</button>'
+          +'<button onclick="moverSemana(\''+p.cod+'\',\'baixo\',\''+dia.id+'\')" title="Descer" '
+          +'style="background:none;border:none;cursor:pointer;color:var(--mu);font-size:10px;padding:0 2px">▼</button>'
+          +'<button onclick="removerSemana(\''+p.cod+'\')" title="Remover do dia" '
+          +'style="background:none;border:none;cursor:pointer;color:var(--mu);font-size:10px;padding:0 2px">✕</button>'
+          +'</div></div>'
+          +'<div style="font-size:11px;color:var(--tx)">'+p.pesq.split(' ').slice(-2).join(' ')+'</div>'
+          +'<div style="font-size:10px;color:'+col.color+';margin-top:2px">'+col.icon+' '+col.label+'</div>'
+          +(p.tecs&&p.tecs.length?'<div style="font-size:10px;color:var(--mu);margin-top:2px">'+p.tecs.slice(0,3).join(' · ')+'</div>':'')
+          +'</div>';
+      });
+    }
+    html+='</div></div>';
+  });
+
+  // Inject strip above board
+  var existingStrip=document.getElementById('sem-strip');
+  if(!existingStrip){
+    var strip=document.createElement('div');
+    strip.id='sem-strip';
+    board.parentNode.insertBefore(strip,board);
+  }
+  document.getElementById('sem-strip').innerHTML=stripHtml;
+  board.innerHTML=html;
+};
+
+window.onSemDragStart = function(evt,cod){
+  window._semDrag=cod;
+  evt.dataTransfer.effectAllowed='move';
+};
+
+window.onSemDrop = function(evt,diaId){
+  evt.preventDefault();
+  document.querySelectorAll('.sem-col-body').forEach(function(el){el.classList.remove('drag-over');});
+  var cod=window._semDrag;
+  if(!cod)return;
+  window._semData[cod]=diaId;
+  saveSemData();
+  renderSemana();
+  window._semDrag=null;
+};
+
+window.removerSemana = function(cod){
+  delete window._semData[cod];
+  saveSemData();
+  renderSemana();
+};
+
+window.moverSemana = function(cod,dir,diaId){
+  // Reorder within the day by storing _semOrder
+  var key='_semOrder_'+diaId;
+  var order=JSON.parse(localStorage.getItem(key)||'[]');
+  var idx=order.indexOf(cod);
+  if(dir==='cima'&&idx>0){order.splice(idx,1);order.splice(idx-1,0,cod);}
+  else if(dir==='baixo'&&idx<order.length-1){order.splice(idx,1);order.splice(idx+1,0,cod);}
+  else if(idx<0){order.push(cod);}
+  localStorage.setItem(key,JSON.stringify(order));
+  renderSemana();
+};
+
+
 window.resetPub = function(){
   document.getElementById('pub-form').style.display='block';document.getElementById('pub-conf').style.display='none';
   document.getElementById('pn').value='';document.getElementById('pe').value='';
@@ -2891,18 +3089,54 @@ window.getKanbanProgress = function(cod, colId){
   return{done:done,total:tasks.length};
 };
 
+window._kanbanView = 'fluxo';
+
+window.setKanbanView = function(v){
+  window._kanbanView = v;
+  document.getElementById('kb-view-fluxo').style.display  = v==='fluxo'  ? 'block' : 'none';
+  document.getElementById('kb-view-semana').style.display = v==='semana' ? 'block' : 'none';
+  document.getElementById('btn-kb-campos').style.display  = v==='fluxo'  ? '' : 'none';
+  document.getElementById('kbt-fluxo').classList.toggle('active', v==='fluxo');
+  document.getElementById('kbt-semana').classList.toggle('active', v==='semana');
+  if(v==='fluxo')  renderKanban();
+  if(v==='semana') renderSemana();
+};
+
+window.refreshKanbanView = function(){
+  if(window._kanbanView==='semana') renderSemana();
+  else renderKanban();
+};
+
+window.toggleUrgente = function(cod){
+  var p=PROJ.find(function(x){return x.cod===cod;});
+  if(!p)return;
+  p.urgente=!p.urgente;
+  salvarProjetoSupa(p);
+  logAudit('URGENCIA',(p.urgente?'MARCADO':'REMOVIDO')+' '+cod);
+  renderKanban();
+  if(window._kanbanView==='semana') renderSemana();
+  toast(cod+(p.urgente?' marcado como URGENTE!':' urgência removida'));
+};
+
 window.renderKanban = function(){
   loadKanbanData();
   var board=document.getElementById('kb-board');
   if(!board)return;
   if(!PROJ||!PROJ.length){
-    board.innerHTML='<div style="color:var(--mu);padding:40px;font-size:13px;text-align:center">Nenhum projeto carregado. Acesse a aba Projetos primeiro.</div>';
+    board.innerHTML='<div style="color:var(--mu);padding:40px;font-size:13px;text-align:center">Nenhum projeto carregado.</div>';
     return;
   }
   var cfg=window._kanbanCfg;
   var html='';
   KANBAN_COLS.forEach(function(col){
-    var projects=PROJ.filter(function(p){return getKanbanCol(p)===col.id;});
+    // Sort: urgentes first, then by cod
+    var projects=PROJ.filter(function(p){return getKanbanCol(p)===col.id;})
+      .sort(function(a,b){
+        if(a.urgente&&!b.urgente)return -1;
+        if(!a.urgente&&b.urgente)return 1;
+        return a.cod.localeCompare(b.cod);
+      });
+    var urgCount=projects.filter(function(p){return p.urgente;}).length;
     html+='<div class="kb-col" id="kbc-'+col.id+'" '
       +'ondragover="event.preventDefault();this.querySelector(\'.kb-col-body\').classList.add(\'drag-over\')" '
       +'ondragleave="this.querySelector(\'.kb-col-body\').classList.remove(\'drag-over\')" '
@@ -2910,42 +3144,43 @@ window.renderKanban = function(){
       +'<div class="kb-col-head" style="border-top:2px solid '+col.color+'">'
       +'<span class="kb-col-icon">'+col.icon+'</span>'
       +'<span class="kb-col-label" style="color:'+col.color+'">'+col.label+'</span>'
+      +'<div style="display:flex;gap:4px;align-items:center">'
+      +(urgCount?'<span style="background:#f85149;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700">'+urgCount+'🔴</span>':'')
       +'<span class="kb-col-count">'+projects.length+'</span>'
-      +'</div>'
+      +'</div></div>'
       +'<div class="kb-col-body" id="kbb-'+col.id+'">';
     if(!projects.length){
       html+='<div class="kb-empty">Sem projetos</div>';
     } else {
       projects.forEach(function(p){
+        var isUrg=p.urgente;
         var prog=getKanbanProgress(p.cod, col.id);
         var progBar=prog?('<div class="kb-progress"><div class="kb-progress-bar" style="width:'
-          +Math.round(prog.done/prog.total*100)+'%;background:'+col.color+'"></div></div>'
+          +Math.round(prog.done/prog.total*100)+'%;background:'+(isUrg?'#f85149':col.color)+'"></div></div>'
           +'<div style="font-size:9px;color:var(--mu);margin-top:3px">'+prog.done+'/'+prog.total+' tarefas</div>'):'';
         var prazo=window._kbPrazos[p.cod];
         var prazoHtml=cfg.showPrazo&&prazo
-          ?'<div class="kb-prazo">⏱ '+new Date(prazo+'T12:00:00').toLocaleDateString("pt-BR")+'</div>'
+          ?'<div class="kb-prazo">'+(isUrg?'🔴':'⏱')+' '+new Date(prazo+'T12:00:00').toLocaleDateString("pt-BR")+'</div>'
           :(cfg.showPrazo?'<div class="kb-prazo" style="cursor:pointer;color:var(--bl)" onclick="setKanbanPrazo(\''+p.cod+'\')">+ prazo</div>':'');
         var tecsHtml=cfg.showTecs&&p.tecs&&p.tecs.length
-          ?'<div class="kb-card-tecs">'+p.tecs.slice(0,4).map(function(t){return '<span class="kb-tec">'+t+'</span>';}).join('')
-            +(p.tecs.length>4?'<span class="kb-tec">+'+( p.tecs.length-4)+'</span>':'')+'</div>'
-          :'';
+          ?'<div class="kb-card-tecs">'+p.tecs.slice(0,4).map(function(t){return '<span class="kb-tec">'+t+'</span>';}).join('')+'</div>':'';
         var alunoHtml=cfg.showAluno&&p.aluno
-          ?'<div class="kb-card-aluno">👤 '+p.aluno+(p.vincul?' ('+p.vincul+')':'')+'</div>'
-          :'';
-        html+='<div class="kb-card" id="kbcard-'+p.cod+'" draggable="true" '
-          +'ondragstart="onKanbanDragStart(event,\''+p.cod+'\')"  '
+          ?'<div class="kb-card-aluno">👤 '+p.aluno+'</div>':'';
+        html+='<div class="kb-card'+(isUrg?' kb-urgente':'')+'" '
+          +'id="kbcard-'+p.cod+'" draggable="true" '
+          +'ondragstart="onKanbanDragStart(event,\''+p.cod+'\')" '
           +'ondragend="event.target.classList.remove(\'dragging\')">'
-          +'<div class="kb-card-cod"><span>'+p.cod+'</span>'
-          +'<span style="font-size:10px;color:'+col.color+'">'+col.icon+'</span>'
-          +'</div>'
-          +'<div class="kb-card-actions">'
+          +'<div class="kb-card-cod">'
+          +'<span>'+p.cod+(isUrg?'<span class="kb-badge-urg">URGENTE</span>':'')+'</span>'
+          +'<div style="display:flex;gap:4px">'
+          +'<button class="kb-card-btn" title="'+(isUrg?'Remover urgência':'Marcar urgente')+'" '
+          +'onclick="toggleUrgente(\''+p.cod+'\')" style="color:'+(isUrg?'#f85149':'var(--mu)'+'')+'">'
+          +(isUrg?'🔴':'⚪')+'</button>'
           +'<button class="kb-card-btn" onclick="openKanbanModal(\''+p.cod+'\',\''+col.id+'\')" title="Checklist">☑</button>'
           +'<button class="kb-card-btn" onclick="verDet(\''+p.cod+'\')" title="Ficha">↗</button>'
-          +'</div>'
+          +'</div></div>'
           +'<div class="kb-card-pesq">'+p.pesq+'</div>'
-          +alunoHtml
-          +tecsHtml
-          +prazoHtml
+          +alunoHtml+tecsHtml+prazoHtml
           +(cfg.showProgress?progBar:'')
           +'</div>';
       });
@@ -2954,6 +3189,7 @@ window.renderKanban = function(){
   });
   board.innerHTML=html;
 };
+
 
 window.onKanbanDragStart = function(evt, cod){
   window._kanbanDrag=cod;
